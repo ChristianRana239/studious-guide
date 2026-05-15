@@ -49,7 +49,7 @@
   <body>
     <div id="info">
       <strong>HomeXR</strong>
-      Four interactive VR buttons are visible in the scene: <em>sin</em>, <em>gauss</em>, <em>limit</em>, and <em>poli</em>.
+      Four interactive VR buttons are visible in the scene: <em>sin</em>, <em>tan</em>, <em>atan</em>, <em>cos</em>, and <em>fx</em>.
       Each connected VR controller shows its own pointer and can trigger the press animation.
     </div>
     <script type="module">
@@ -85,7 +85,7 @@
       scene.add(floor);
 
       const buttonRoot = new THREE.Group();
-      const labels = ['sin', 'gauss', 'limit', 'poli'];
+      const labels = ['sin', 'tan', 'atan', 'cos', 'fx'];
       labels.forEach((label, index) => {
         const button = createButton(label);
         button.position.set((index - 1.5) * 0.92, 1.4, -1.2);
@@ -234,6 +234,14 @@
           button.userData.pressed = false;
           if (button.userData.label === 'sin') {
             window.location.href = 'sin.html';
+          } else if (button.userData.label === 'tan') {
+            window.location.href = 'tan.html';
+          } else if (button.userData.label === 'atan') {
+            window.location.href = 'atan.html';
+          } else if (button.userData.label === 'cos') {
+            window.location.href = 'cos.html';
+          } else if (button.userData.label === 'fx') {
+            window.location.href = 'fx.html';
           }
         }, 240);
       }
