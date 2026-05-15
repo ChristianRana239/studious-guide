@@ -88,6 +88,18 @@
         color: #ffd568;
       }
 
+      #formulaBox {
+        margin-top: 0.8rem;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid rgba(136, 200, 255, 0.24);
+        border-radius: 0.75rem;
+        background: rgba(8, 16, 36, 0.78);
+        color: #dbe8ff;
+        font-family: monospace;
+        font-size: 0.95rem;
+        white-space: pre-wrap;
+      }
+
       canvas {
         display: block;
       }
@@ -106,7 +118,8 @@
         <input type="range" id="bSlider" min="0.1" max="10" step="0.1" value="1" />
         <span id="bValue" class="valueLabel">1.0</span>
       </div>
-      <p style="margin-top: 0.7rem; margin-bottom: 0;">A 3D plot of f(x) = a*x - b/x is shown with x, y, and z axes. One slider adjust a, and one slider adjusts b. Grab a connected VR controller and use the select trigger to rotate and translate the axis group.</p>
+      <div id="formulaBox">f(x) = 1.0*x - 1.0/x</div>
+      <p style="margin-top: 0.7rem; margin-bottom: 0;">A 3D plot of f(x) = a*x - b/x is shown with x, y, and z axes. One slider adjusts a, and one slider adjusts b. Grab a connected VR controller and use the select trigger to rotate and translate the axis group.</p>
     </div>
     <script type="module">
       import * as THREE from './vendor/three/build/three.module.js';
@@ -168,6 +181,7 @@
       const axesStartPos = new THREE.Vector3();
 
       const aSlider = document.getElementById('aSlider');
+      const formulaBox = document.getElementById('formulaBox');
       
       const bSlider = document.getElementById('bSlider');
       const aValue = document.getElementById('aValue');
@@ -182,11 +196,11 @@
 
       function onParameterChange() {
         a = parseFloat(aSlider.value);
-        
         b = parseFloat(bSlider.value);
         aValue.textContent = a.toFixed(1);
         bValue.textContent = b.toFixed(1);
         updateFxCurve();
+        updateFormulaBox();
       }
 
       function updateFxCurve() {
@@ -194,6 +208,11 @@
           axesGroup.remove(fxCurve);
         }
         fxCurve = createFxCurve(a, b);
+      }
+
+      function updateFormulaBox() {
+        const bText = b < 0 ? `+ ${Math.abs(b).toFixed(1)}/x` : `- ${b.toFixed(1)}/x`;
+        formulaBox.textContent = `f(x) = ${a.toFixed(1)}*x ${bText}`;
       }
 
       function createAxes() {
