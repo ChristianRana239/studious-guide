@@ -9,12 +9,12 @@
   "theme_color": "#6b46c1",
   "icons": [
     {
-      "src": "docs/assets/metaverso-a-scuola.black.square.192x192.png",
+      "src": "assets/metaverso-a-scuola.black.square.192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "docs/assets/metaverso-a-scuola.black.square.512x512.png",
+      "src": "assets/metaverso-a-scuola.black.square.512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
