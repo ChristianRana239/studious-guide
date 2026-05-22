@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Galli, Santin — f(x) XR</title>
+    <title>f(x) XR</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 
@@ -54,13 +54,22 @@
         font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #e8f4ff; outline: none;
       }
       
+      .btn-group { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
       #applyBtn {
-        background: #0088ff; color: #ffffff;
-        border: none; border-radius: 4px; padding: 0.4rem 0.8rem;
+        flex: 2; background: #0088ff; color: #ffffff;
+        border: none; border-radius: 4px; padding: 0.5rem;
         font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.75rem; cursor: pointer;
         text-transform: uppercase; transition: background 0.2s;
       }
       #applyBtn:hover { background: #00aaff; }
+
+      #resetBtn {
+        flex: 1; background: rgba(255, 255, 255, 0.05); color: #7dd6ff;
+        border: 1px solid rgba(80, 170, 255, 0.3); border-radius: 4px; padding: 0.5rem;
+        font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+        text-transform: uppercase; transition: all 0.2s;
+      }
+      #resetBtn:hover { background: rgba(0, 170, 255, 0.15); }
 
       #fxError { font-size: 0.65rem; color: #ff7aac; min-height: 0.85rem; margin-top: 0.3rem; }
 
@@ -85,13 +94,8 @@
       .ex-chip:hover { background: rgba(50,130,240,0.2); border-color: rgba(80,170,255,0.4); }
 
       .info-vr {
-        background: rgba(0, 170, 255, 0.05);
-        border: 1px dashed rgba(0, 170, 255, 0.25);
-        padding: 0.6rem;
-        border-radius: 4px;
-        font-size: 0.68rem;
-        line-height: 1.4;
-        color: #a2cfff;
+        background: rgba(0, 170, 255, 0.05); border: 1px dashed rgba(0, 170, 255, 0.25);
+        padding: 0.6rem; border-radius: 4px; font-size: 0.68rem; line-height: 1.4; color: #a2cfff;
       }
 
       canvas { display: block; }
@@ -102,14 +106,17 @@
     <div id="panel">
       <div class="panel-inner">
         <div class="ph">
-          <div class="ph-left"><span class="ph-title">f(x) Explorer XR</span><br><span class="ph-sub">Galli &amp; Santin</span></div>
+          <div class="ph-left"><span class="ph-title">f(x) Explorer XR</span><br><span class="ph-sub">Made with <3 by Leonardo Galli</span></div>
         </div>
 
         <div class="sec-label">Formula</div>
         <div class="fx-row">
           <span class="fx-lbl">f(x)=</span>
           <input id="fxInput" type="text" value="2*x - 1/x" />
+        </div>
+        <div class="btn-group">
           <button id="applyBtn">PLOT</button>
+          <button id="resetBtn">RESET VIEW</button>
         </div>
         <div id="fxError"></div>
 
@@ -128,8 +135,8 @@
         <div class="sec-label">Istruzioni Interazione VR</div>
         <div class="info-vr">
           • <strong>Telecamera</strong>: Muovi gli analogici del VR per spostarti o zoomare.<br>
-          • <strong>Sposta Menu</strong>: Punta il raggio laser sul menu (in un punto qualsiasi vuoto), tieni premuto il grilletto e trascina.<br>
-          • <strong>Sposta Assi</strong>: Punta il raggio laser direttamente sopra gli assi cartesiani 3D, tieni premuto il grilletto e trascina.
+          • <strong>Sposta Menu / Assi</strong>: Punta il raggio laser su di loro, tieni premuto il grilletto e trascina.<br>
+          • <strong>Gabbia Virtuale</strong>: Gli assi hanno una bounding box protettiva per facilitare la presa.
         </div>
       </div>
     </div>
@@ -137,6 +144,11 @@
     <script type="module">
       import * as THREE from '../vendor/three/build/three.module.js';
       import { VRButton } from '../vendor/three/examples/jsm/webxr/VRButton.js';
+
+      /* ══ DEFAULT POSITIONS FOR RESET ══════════════════════ */
+      const DEFAULT_AXES_POS = new THREE.Vector3(0, 1.25, -0.5);
+      const DEFAULT_MENU_POS = new THREE.Vector3(-1.1, 1.35, -0.5);
+      const DEFAULT_MENU_ROT = new THREE.Euler(0, 0.35, 0);
 
       /* ══ RENDERER & SCENE ═════════════════════════════════ */
       const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -173,7 +185,7 @@
       let currentDragTarget = null; // 'menu' | 'axes' | 'slider' | null
 
       const axesGroup = new THREE.Group();
-      axesGroup.position.set(0, 1.25, -0.5);
+      axesGroup.position.copy(DEFAULT_AXES_POS);
       axesGroup.scale.setScalar(0.75);
       scene.add(axesGroup);
 
@@ -184,11 +196,12 @@
       const vrUiTexture = new THREE.CanvasTexture(vrUiCanvas);
 
       const hitBoxes = {
-        sliderA:  { x: 40, y: 110, w: 432, h: 35, min: -10, max: 10, type: 'slider', key: 'A' },
-        sliderB:  { x: 40, y: 190, w: 432, h: 35, min: -10, max: 10, type: 'slider', key: 'B' },
-        fChip1:   { x: 40,  y: 250, w: 132, h: 38, type: 'formula', fx: 'A*sin(B*x)' },
-        fChip2:   { x: 190, y: 250, w: 132, h: 38, type: 'formula', fx: 'A*x^2 + B' },
-        fChip3:   { x: 340, y: 250, w: 132, h: 38, type: 'formula', fx: 'sin(A*x)/x' }
+        sliderA:  { x: 40, y: 100, w: 432, h: 35, min: -10, max: 10, type: 'slider', key: 'A' },
+        sliderB:  { x: 40, y: 170, w: 432, h: 35, min: -10, max: 10, type: 'slider', key: 'B' },
+        fChip1:   { x: 40,  y: 230, w: 132, h: 38, type: 'formula', fx: 'A*sin(B*x)' },
+        fChip2:   { x: 190, y: 230, w: 132, h: 38, type: 'formula', fx: 'A*x^2 + B' },
+        fChip3:   { x: 340, y: 230, w: 132, h: 38, type: 'formula', fx: 'sin(A*x)/x' },
+        resetBtn: { x: 40,  y: 290, w: 432, h: 40, type: 'reset' }
       };
 
       function drawVrUi() {
@@ -197,14 +210,14 @@
 
         // Header
         vrUiCtx.fillStyle = '#7dd6ff'; vrUiCtx.font = 'bold 24px monospace';
-        vrUiCtx.fillText(`f(x) = ${fxExpr}`, 40, 55);
-        vrUiCtx.fillStyle = 'rgba(0, 170, 255, 0.2)'; vrUiCtx.fillRect(40, 75, 432, 2);
+        vrUiCtx.fillText(`f(x) = ${fxExpr}`, 40, 50);
+        vrUiCtx.fillStyle = 'rgba(0, 170, 255, 0.2)'; vrUiCtx.fillRect(40, 68, 432, 2);
 
         // Sliders
-        vrUiCtx.fillStyle = '#5ae4ff'; vrUiCtx.font = '16px monospace'; vrUiCtx.fillText(`Parametro A: ${paramA.toFixed(1)}`, 40, 105);
+        vrUiCtx.fillStyle = '#5ae4ff'; vrUiCtx.font = '15px monospace'; vrUiCtx.fillText(`Parametro A: ${paramA.toFixed(1)}`, 40, 95);
         drawCanvasSlider(hitBoxes.sliderA, paramA, '#5ae4ff');
 
-        vrUiCtx.fillStyle = '#ff7aac'; vrUiCtx.fillText(`Parametro B: ${paramB.toFixed(1)}`, 40, 185);
+        vrUiCtx.fillStyle = '#ff7aac'; vrUiCtx.fillText(`Parametro B: ${paramB.toFixed(1)}`, 40, 165);
         drawCanvasSlider(hitBoxes.sliderB, paramB, '#ff7aac');
 
         // Chips
@@ -212,14 +225,18 @@
         drawCanvasChip(hitBoxes.fChip2, 'A·x²+B');
         drawCanvasChip(hitBoxes.fChip3, 'sin(A·x)/x');
 
-        // Area Info / Drag Context
-        vrUiCtx.fillStyle = 'rgba(255,255,255,0.03)'; vrUiCtx.fillRect(40, 320, 432, 150);
-        vrUiCtx.strokeStyle = 'rgba(80, 170, 255, 0.15)'; vrUiCtx.strokeRect(40, 320, 432, 150);
-        
-        vrUiCtx.fillStyle = '#a2cfff'; vrUiCtx.font = '12px monospace';
-        vrUiCtx.fillText('--- PANNELLO DI TRASCINAMENTO DIRETTO ---', 60, 350);
-        vrUiCtx.fillText('-> Trascina un punto vuoto del menu per muoverlo.', 60, 385);
-        vrUiCtx.fillText('-> Afferra direttamente gli assi 3D per muoverli.', 60, 420);
+        // Reset Button VR
+        vrUiCtx.fillStyle = 'rgba(255, 74, 116, 0.1)'; vrUiCtx.fillRect(hitBoxes.resetBtn.x, hitBoxes.resetBtn.y, hitBoxes.resetBtn.w, hitBoxes.resetBtn.h);
+        vrUiCtx.strokeStyle = 'rgba(255, 74, 116, 0.5)'; vrUiCtx.strokeRect(hitBoxes.resetBtn.x, hitBoxes.resetBtn.y, hitBoxes.resetBtn.w, hitBoxes.resetBtn.h);
+        vrUiCtx.fillStyle = '#ff7aac'; vrUiCtx.font = 'bold 15px monospace'; vrUiCtx.fillText('RESET VIEW / RE-CENTER', 160, 315);
+
+        // Area Info
+        vrUiCtx.fillStyle = 'rgba(255,255,255,0.02)'; vrUiCtx.fillRect(40, 355, 432, 115);
+        vrUiCtx.strokeStyle = 'rgba(80, 170, 255, 0.1)'; vrUiCtx.strokeRect(40, 355, 432, 115);
+        vrUiCtx.fillStyle = '#a2cfff'; vrUiCtx.font = '11px monospace';
+        vrUiCtx.fillText('-> Trascina le aree vuote per spostare gli oggetti.', 55, 385);
+        vrUiCtx.fillText('-> Gli assi hanno una bounding box protettiva.', 55, 415);
+        vrUiCtx.fillText('-> Usa gli stick analogici per volare nella scena.', 55, 445);
 
         vrUiTexture.needsUpdate = true;
       }
@@ -234,13 +251,13 @@
       function drawCanvasChip(box, text) {
         vrUiCtx.fillStyle = 'rgba(0, 130, 255, 0.06)'; vrUiCtx.fillRect(box.x, box.y, box.w, box.h);
         vrUiCtx.strokeStyle = 'rgba(0, 170, 255, 0.3)'; vrUiCtx.lineWidth = 1; vrUiCtx.strokeRect(box.x, box.y, box.w, box.h);
-        vrUiCtx.fillStyle = '#99ccff'; vrUiCtx.font = '14px monospace'; vrUiCtx.fillText(text, box.x + 12, box.y + 24);
+        vrUiCtx.fillStyle = '#99ccff'; vrUiCtx.font = '13px monospace'; vrUiCtx.fillText(text, box.x + 10, box.y + 24);
       }
 
       const vrUiGeo = new THREE.PlaneGeometry(1.25, 1.25);
       const vrUiMat = new THREE.MeshBasicMaterial({ map: vrUiTexture, side: THREE.DoubleSide, transparent: true });
       vrUiMesh = new THREE.Mesh(vrUiGeo, vrUiMat);
-      vrUiMesh.position.set(-1.1, 1.35, -0.5); vrUiMesh.rotation.y = 0.35;
+      vrUiMesh.position.copy(DEFAULT_MENU_POS); vrUiMesh.rotation.copy(DEFAULT_MENU_ROT);
       scene.add(vrUiMesh);
 
       /* ══ SYNC CONTROLLI SCHERMO (2D) ═══════════ */
@@ -250,6 +267,13 @@
       function syncSliderBg(el) {
         const pct = ((parseFloat(el.value) - parseFloat(el.min)) / (parseFloat(el.max) - parseFloat(el.min)) * 100).toFixed(1) + '%';
         el.style.setProperty('--pct', pct);
+      }
+
+      function resetUniverse() {
+        axesGroup.position.copy(DEFAULT_AXES_POS);
+        vrUiMesh.position.copy(DEFAULT_MENU_POS);
+        vrUiMesh.rotation.copy(DEFAULT_MENU_ROT);
+        cameraRig.position.set(0, 0, 0);
       }
 
       function updateAllViews() {
@@ -262,6 +286,7 @@
 
       aSlider.addEventListener('input', e => { paramA = parseFloat(e.target.value); updateAllViews(); });
       bSlider.addEventListener('input', e => { paramB = parseFloat(e.target.value); updateAllViews(); });
+      document.getElementById('resetBtn').addEventListener('click', resetUniverse);
 
       document.getElementById('applyBtn').addEventListener('click', () => {
         fxExpr = document.getElementById('fxInput').value.trim(); updateAllViews();
@@ -301,7 +326,7 @@
         axesGroup.add(fxCurve);
       }
 
-      /* ══ GENERAZIONE ASSI CARTESIANI ══ */
+      /* ══ GENERAZIONE ASSI E BOUNDING BOX DEGLI ASSI ══ */
       createAxes();
       updateAllViews();
 
@@ -320,6 +345,13 @@
         const yArrow = new THREE.Mesh(coneGeo, mY); yArrow.position.set(0, length, 0);
         const zArrow = new THREE.Mesh(coneGeo, mZ); zArrow.rotation.x = Math.PI/2; zArrow.position.set(0, 0, length);
         axesGroup.add(xArrow, yArrow, zArrow);
+
+        // Bounding Box protettiva per rendere facile la presa in VR
+        const boxGeo = new THREE.BoxGeometry(length, length, length);
+        const boxMat = new THREE.MeshBasicMaterial({ color: 0x00aaff, wireframe: true, transparent: true, opacity: 0.04 });
+        const boundingBoxMesh = new THREE.Mesh(boxGeo, boxMat);
+        boundingBoxMesh.position.set(length/2, length/2, length/2);
+        axesGroup.add(boundingBoxMesh);
       }
 
       /* ══ LOGICA PUNTATORI E CONTROLLER VR ═════════════════ */
@@ -346,7 +378,6 @@
         raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
 
-        // 1. Controllo Intersezione ASSI (Priorità assoluta se si clicca sopra di essi)
         const axesHits = raycaster.intersectObject(axesGroup, true);
         if (axesHits.length > 0) {
           selectedController = controller;
@@ -355,27 +386,24 @@
           return;
         }
 
-        // 2. Controllo Intersezione MENU VR
         const uiHits = raycaster.intersectObject(vrUiMesh);
         if (uiHits.length > 0) {
           const uv = uiHits[0].uv;
           const cx = uv.x * 512; const cy = (1 - uv.y) * 512;
           let hitInteractive = false;
 
-          // Controlla se hai cliccato elementi interattivi (chip o slider)
           for (const key in hitBoxes) {
             const box = hitBoxes[key];
             if (cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h) {
               selectedController = controller; 
               activeBox = box;
-              currentDragTarget = 'slider';
+              currentDragTarget = (box.type === 'slider') ? 'slider' : 'click';
               handleVrInteraction(cx);
               hitInteractive = true;
               break;
             }
           }
 
-          // Se NON hai cliccato elementi interattivi, consideralo come trascinamento libero del Menu
           if (!hitInteractive) {
             selectedController = controller;
             currentDragTarget = 'menu';
@@ -405,6 +433,10 @@
           document.getElementById('fxInput').value = fxExpr;
           updateAllViews();
         }
+        else if (activeBox.type === 'reset') {
+          resetUniverse();
+          updateAllViews();
+        }
       }
 
       /* ══ GESTIONE ANALOGICI VR (CAM MOVEMENT) ═══════════════ */
@@ -418,18 +450,11 @@
           if (source.gamepad && source.gamepad.axes) {
             const axes = source.gamepad.axes;
             if (axes.length >= 4) {
-              const stickX = axes[2];
-              const stickY = axes[3];
-
-              if (Math.abs(stickX) > 0.1) {
-                cameraRig.position.x += stickX * CAM_STICK_SPEED;
-              }
+              const stickX = axes[2]; const stickY = axes[3];
+              if (Math.abs(stickX) > 0.1) cameraRig.position.x += stickX * CAM_STICK_SPEED;
               if (Math.abs(stickY) > 0.1) {
-                if (source.handedness === 'right') {
-                  cameraRig.position.z += stickY * CAM_STICK_SPEED; 
-                } else {
-                  cameraRig.position.y -= stickY * CAM_STICK_SPEED; 
-                }
+                if (source.handedness === 'right') cameraRig.position.z += stickY * CAM_STICK_SPEED; 
+                else cameraRig.position.y -= stickY * CAM_STICK_SPEED;
               }
             }
           }
@@ -444,6 +469,17 @@
       /* ══ RENDERING & ANIMATION LOOP ═══════════════════════ */
       renderer.setAnimationLoop(() => {
         processGamepadInputs();
+
+        // Feedback Laser Dinamico del Controller
+        controllers.forEach(c => {
+          tempMatrix.identity().extractRotation(c.matrixWorld);
+          raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
+          raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+          
+          const hasHit = raycaster.intersectObject(axesGroup, true).length > 0 || raycaster.intersectObject(vrUiMesh).length > 0;
+          const rayLine = c.children[0];
+          if (rayLine) rayLine.material.color.setHex(hasHit ? 0x00ff88 : 0x00aaff);
+        });
 
         if (selectedController && currentDragTarget) {
           tempMatrix.identity().extractRotation(selectedController.matrixWorld);
