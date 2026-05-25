@@ -135,11 +135,11 @@
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x0a0e18);
 
-      const cameraRig = new THREE.Group();
-      scene.add(cameraRig);
+      const playerRig = new THREE.Group();
+      scene.add(playerRig);
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 100);
       camera.position.set(0, 1.8, 4);
-      cameraRig.add(camera);
+      playerRig.add(camera);
 
       const ambientLight = new THREE.HemisphereLight(0xffffff, 0x202035, 0.9);
       scene.add(ambientLight);
@@ -214,12 +214,12 @@
         // Slider A label
         vrUiCtx.fillStyle = '#c084fc';
         vrUiCtx.font = '16px monospace';
-        vrUiCtx.fillText(`Amplitude A: ${amplitude.toFixed(2)}`, 40, 100);
+        vrUiCtx.fillText(`Amplitudine A: ${amplitude.toFixed(2)}`, 40, 100);
         drawCanvasSlider(hitBoxes.sliderA, amplitude, '#c084fc');
 
         // Slider B label
         vrUiCtx.fillStyle = '#22c55e';
-        vrUiCtx.fillText(`Frequency B: ${frequency.toFixed(2)}`, 40, 180);
+        vrUiCtx.fillText(`Frequenza B: ${frequency.toFixed(2)}`, 40, 180);
         drawCanvasSlider(hitBoxes.sliderB, frequency, '#22c55e');
 
         // Formula display
@@ -296,12 +296,12 @@
       const bValue = document.getElementById('bValue');
       bSlider.addEventListener('input', onSliderChange);
 
-      document.getElementById('camUp').addEventListener('click', () => { cameraRig.position.y += 0.15; });
-      document.getElementById('camDown').addEventListener('click', () => { cameraRig.position.y -= 0.15; });
-      document.getElementById('camLeft').addEventListener('click', () => { cameraRig.position.x -= 0.15; });
-      document.getElementById('camRight').addEventListener('click', () => { cameraRig.position.x += 0.15; });
-      document.getElementById('camZIn').addEventListener('click', () => { cameraRig.position.z -= 0.15; });
-      document.getElementById('camZOut').addEventListener('click', () => { cameraRig.position.z += 0.15; });
+      document.getElementById('camUp').addEventListener('click', () => { playerRig.position.y += 0.15; });
+      document.getElementById('camDown').addEventListener('click', () => { playerRig.position.y -= 0.15; });
+      document.getElementById('camLeft').addEventListener('click', () => { playerRig.position.x -= 0.15; });
+      document.getElementById('camRight').addEventListener('click', () => { playerRig.position.x += 0.15; });
+      document.getElementById('camZIn').addEventListener('click', () => { playerRig.position.z -= 0.15; });
+      document.getElementById('camZOut').addEventListener('click', () => { playerRig.position.z += 0.15; });
 
       document.getElementById('dragMenuBtn').addEventListener('click', () => toggleDragMode('menu', document.getElementById('dragMenuBtn')));
       document.getElementById('dragAxesBtn').addEventListener('click', () => toggleDragMode('axes', document.getElementById('dragAxesBtn')));
@@ -318,7 +318,7 @@
       }
 
       const controllers = [createController(0), createController(1)];
-      controllers.forEach((controller) => scene.add(controller));
+      controllers.forEach((controller) => playerRig.add(controller));
 
       const raycaster = new THREE.Raycaster();
       const tempMatrix = new THREE.Matrix4();
@@ -511,22 +511,22 @@
           if (box.type === 'btn') {
             switch (box.action) {
               case 'camUp':
-                cameraRig.position.y += 0.15;
+                playerRig.position.y += 0.15;
                 break;
               case 'camDown':
-                cameraRig.position.y -= 0.15;
+                playerRig.position.y -= 0.15;
                 break;
               case 'camLeft':
-                cameraRig.position.x -= 0.15;
+                playerRig.position.x -= 0.15;
                 break;
               case 'camRight':
-                cameraRig.position.x += 0.15;
+                playerRig.position.x += 0.15;
                 break;
               case 'camZIn':
-                cameraRig.position.z -= 0.15;
+                playerRig.position.z -= 0.15;
                 break;
               case 'camZOut':
-                cameraRig.position.z += 0.15;
+                playerRig.position.z += 0.15;
                 break;
             }
             return;
