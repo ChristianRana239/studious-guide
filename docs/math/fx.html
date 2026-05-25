@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Galli, Santin — f(x) XR Pro Elite</title>
+    <title>Galli, Santin — f(x) XR</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap');
 
@@ -125,10 +125,11 @@
         <div class="sr"><span class="sn b">B</span><input type="range" id="bSlider" min="-10" max="10" step="0.1" value="1" /><span class="sv" id="bValue">1.0</span></div>
 
         <div class="div"></div>
-        <div class="sec-label">Istruzioni VR</div>
+        <div class="sec-label">Istruzioni Interazione VR</div>
         <div class="info-vr">
-          • Usa gli <strong>Analogici del VR</strong> per spostare e zoomare la telecamera nello spazio.<br><br>
-          • Seleziona e tieni premuto il grilletto sopra le zone <strong>[DRAG MENU]</strong> o <strong>[DRAG AXES]</strong> sul pannello VR per riposizionarli liberamente.
+          • <strong>Telecamera</strong>: Muovi gli analogici del VR per spostarti o zoomare.<br>
+          • <strong>Sposta Menu</strong>: Punta il raggio laser sul menu (in un punto qualsiasi vuoto), tieni premuto il grilletto e trascina.<br>
+          • <strong>Sposta Assi</strong>: Punta il raggio laser direttamente sopra gli assi cartesiani 3D, tieni premuto il grilletto e trascina.
         </div>
       </div>
     </div>
@@ -160,7 +161,7 @@
       dirLight.position.set(4, 8, 4);
       scene.add(dirLight);
 
-      /* Pavimentazione */
+      /* Ambiente base scuro */
       const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({ color: 0x040914, roughness: 0.93 }));
       floor.rotation.x = -Math.PI / 2; scene.add(floor);
       const grid = new THREE.GridHelper(14, 28, 0x142847, 0x061124); grid.position.y = 0.001; scene.add(grid);
@@ -187,19 +188,14 @@
         sliderB:  { x: 40, y: 190, w: 432, h: 35, min: -10, max: 10, type: 'slider', key: 'B' },
         fChip1:   { x: 40,  y: 250, w: 132, h: 38, type: 'formula', fx: 'A*sin(B*x)' },
         fChip2:   { x: 190, y: 250, w: 132, h: 38, type: 'formula', fx: 'A*x^2 + B' },
-        fChip3:   { x: 340, y: 250, w: 132, h: 38, type: 'formula', fx: 'sin(A*x)/x' },
-        dragMenu: { x: 40,  y: 330, w: 432, h: 60, type: 'dragZone', target: 'menu' },
-        dragAxes: { x: 40,  y: 410, w: 432, h: 60, type: 'dragZone', target: 'axes' }
+        fChip3:   { x: 340, y: 250, w: 132, h: 38, type: 'formula', fx: 'sin(A*x)/x' }
       };
 
       function drawVrUi() {
-        // Background minimale high-tech
         vrUiCtx.fillStyle = '#040914'; vrUiCtx.fillRect(0, 0, 512, 512);
-        
-        // Bordatura netta cyan indaco
         vrUiCtx.strokeStyle = '#0066cc'; vrUiCtx.lineWidth = 4; vrUiCtx.strokeRect(2, 2, 508, 508);
 
-        // Header Formula
+        // Header
         vrUiCtx.fillStyle = '#7dd6ff'; vrUiCtx.font = 'bold 24px monospace';
         vrUiCtx.fillText(`f(x) = ${fxExpr}`, 40, 55);
         vrUiCtx.fillStyle = 'rgba(0, 170, 255, 0.2)'; vrUiCtx.fillRect(40, 75, 432, 2);
@@ -211,14 +207,19 @@
         vrUiCtx.fillStyle = '#ff7aac'; vrUiCtx.fillText(`Parametro B: ${paramB.toFixed(1)}`, 40, 185);
         drawCanvasSlider(hitBoxes.sliderB, paramB, '#ff7aac');
 
-        // Chips Formule
+        // Chips
         drawCanvasChip(hitBoxes.fChip1, 'A·sin(B·x)');
         drawCanvasChip(hitBoxes.fChip2, 'A·x²+B');
         drawCanvasChip(hitBoxes.fChip3, 'sin(A·x)/x');
 
-        // Sezioni di Selezione e Trascinamento Fisico (Sostituiscono i vecchi pulsanti)
-        drawDragZone(hitBoxes.dragMenu, 'PREMI E TRASCINA PER SPOSTARE MENU');
-        drawDragZone(hitBoxes.dragAxes, 'PREMI E TRASCINA PER SPOSTARE ASSI');
+        // Area Info / Drag Context
+        vrUiCtx.fillStyle = 'rgba(255,255,255,0.03)'; vrUiCtx.fillRect(40, 320, 432, 150);
+        vrUiCtx.strokeStyle = 'rgba(80, 170, 255, 0.15)'; vrUiCtx.strokeRect(40, 320, 432, 150);
+        
+        vrUiCtx.fillStyle = '#a2cfff'; vrUiCtx.font = '12px monospace';
+        vrUiCtx.fillText('--- PANNELLO DI TRASCINAMENTO DIRETTO ---', 60, 350);
+        vrUiCtx.fillText('-> Trascina un punto vuoto del menu per muoverlo.', 60, 385);
+        vrUiCtx.fillText('-> Afferra direttamente gli assi 3D per muoverli.', 60, 420);
 
         vrUiTexture.needsUpdate = true;
       }
@@ -236,27 +237,13 @@
         vrUiCtx.fillStyle = '#99ccff'; vrUiCtx.font = '14px monospace'; vrUiCtx.fillText(text, box.x + 12, box.y + 24);
       }
 
-      function drawDragZone(box, text) {
-        const isCurrent = (currentDragTarget === box.target);
-        vrUiCtx.fillStyle = isCurrent ? 'rgba(0, 255, 170, 0.15)' : 'rgba(255, 255, 255, 0.02)';
-        vrUiCtx.fillRect(box.x, box.y, box.w, box.h);
-        vrUiCtx.strokeStyle = isCurrent ? '#00ffaa' : 'rgba(80, 170, 255, 0.25)';
-        vrUiCtx.lineWidth = 1.5;
-        vrUiCtx.strokeRect(box.x, box.y, box.w, box.h);
-        
-        vrUiCtx.fillStyle = isCurrent ? '#00ffaa' : '#7dd6ff';
-        vrUiCtx.font = 'bold 12px monospace';
-        vrUiCtx.fillText(text, box.x + 20, box.y + 35);
-      }
-
-      // Creazione UI Fluttuante 3D
       const vrUiGeo = new THREE.PlaneGeometry(1.25, 1.25);
       const vrUiMat = new THREE.MeshBasicMaterial({ map: vrUiTexture, side: THREE.DoubleSide, transparent: true });
       vrUiMesh = new THREE.Mesh(vrUiGeo, vrUiMat);
       vrUiMesh.position.set(-1.1, 1.35, -0.5); vrUiMesh.rotation.y = 0.35;
       scene.add(vrUiMesh);
 
-      /* ══ SYNC CONTROLLI INTERFACCIA SCHERMO (2D) ═══════════ */
+      /* ══ SYNC CONTROLLI SCHERMO (2D) ═══════════ */
       const aSlider = document.getElementById('aSlider'); const aValue = document.getElementById('aValue');
       const bSlider = document.getElementById('bSlider'); const bValue = document.getElementById('bValue');
 
@@ -285,7 +272,7 @@
         });
       });
 
-      /* ══ LOGICA COMPILATORE MATEMATICO ══════════════ */
+      /* ══ COMPILATORE MATEMATICO ══════════════ */
       function buildEval(expr) {
         const e = expr.replace(/\^/g, '**').replace(/\bsin\b/g, 'Math.sin').replace(/\bcos\b/g, 'Math.cos').replace(/\btan\b/g, 'Math.tan').replace(/\bpi\b/gi, 'Math.PI');
         return new Function('x', 'A', 'B', `"use strict"; return (${e});`);
@@ -314,7 +301,7 @@
         axesGroup.add(fxCurve);
       }
 
-      /* ══ ASSI CARTESIANI ══ */
+      /* ══ GENERAZIONE ASSI CARTESIANI ══ */
       createAxes();
       updateAllViews();
 
@@ -359,26 +346,40 @@
         raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
 
-        const intersects = raycaster.intersectObject(vrUiMesh);
-        if (intersects.length > 0) {
-          const uv = intersects[0].uv;
-          const cx = uv.x * 512; const cy = (1 - uv.y) * 512;
+        // 1. Controllo Intersezione ASSI (Priorità assoluta se si clicca sopra di essi)
+        const axesHits = raycaster.intersectObject(axesGroup, true);
+        if (axesHits.length > 0) {
+          selectedController = controller;
+          currentDragTarget = 'axes';
+          initialObjectOffset.copy(axesGroup.position).sub(axesHits[0].point);
+          return;
+        }
 
+        // 2. Controllo Intersezione MENU VR
+        const uiHits = raycaster.intersectObject(vrUiMesh);
+        if (uiHits.length > 0) {
+          const uv = uiHits[0].uv;
+          const cx = uv.x * 512; const cy = (1 - uv.y) * 512;
+          let hitInteractive = false;
+
+          // Controlla se hai cliccato elementi interattivi (chip o slider)
           for (const key in hitBoxes) {
             const box = hitBoxes[key];
             if (cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h) {
-              selectedController = controller; activeBox = box;
-
-              if (box.type === 'dragZone') {
-                currentDragTarget = box.target;
-                const targetObj = (box.target === 'menu') ? vrUiMesh : axesGroup;
-                initialObjectOffset.copy(targetObj.position).sub(intersects[0].point);
-                drawVrUi();
-              } else {
-                handleVrInteraction(cx);
-              }
+              selectedController = controller; 
+              activeBox = box;
+              currentDragTarget = 'slider';
+              handleVrInteraction(cx);
+              hitInteractive = true;
               break;
             }
+          }
+
+          // Se NON hai cliccato elementi interattivi, consideralo come trascinamento libero del Menu
+          if (!hitInteractive) {
+            selectedController = controller;
+            currentDragTarget = 'menu';
+            initialObjectOffset.copy(vrUiMesh.position).sub(uiHits[0].point);
           }
         }
       }
@@ -386,10 +387,7 @@
       function onSelectEnd() { 
         selectedController = null; 
         activeBox = null; 
-        if(currentDragTarget) {
-          currentDragTarget = null;
-          drawVrUi();
-        }
+        currentDragTarget = null;
       }
 
       function handleVrInteraction(canvasX) {
@@ -416,28 +414,21 @@
         const session = renderer.xr.getSession();
         if (!session) return;
 
-        // Itera sui controller connessi alla sessione WebXR
         for (const source of session.inputSources) {
           if (source.gamepad && source.gamepad.axes) {
             const axes = source.gamepad.axes;
-            
-            // Standard WebXR Gamepad Mapping per gli analogici (Thumbstick):
-            // axes[2] = Orizzontale (X), axes[3] = Verticale (Y)
             if (axes.length >= 4) {
               const stickX = axes[2];
               const stickY = axes[3];
 
-              // Deadzone per evitare movimenti fantasma se l'analogico è usurato
               if (Math.abs(stickX) > 0.1) {
                 cameraRig.position.x += stickX * CAM_STICK_SPEED;
               }
               if (Math.abs(stickY) > 0.1) {
-                // Se usi il controller destro fa una cosa, se usi il sinistro un'altra (opzionale)
-                // Qui mappiamo lo stick Y per muovere avanti/indietro (Zoom Z) e sopra/sotto (Y)
                 if (source.handedness === 'right') {
-                  cameraRig.position.z += stickY * CAM_STICK_SPEED; // Muove asse Z (Zoom)
+                  cameraRig.position.z += stickY * CAM_STICK_SPEED; 
                 } else {
-                  cameraRig.position.y -= stickY * CAM_STICK_SPEED; // Muove asse Y (Altezza)
+                  cameraRig.position.y -= stickY * CAM_STICK_SPEED; 
                 }
               }
             }
@@ -452,26 +443,22 @@
 
       /* ══ RENDERING & ANIMATION LOOP ═══════════════════════ */
       renderer.setAnimationLoop(() => {
-        // Gestisci l'input continuo degli analogici VR
         processGamepadInputs();
 
-        // Logica di trascinamento attivo (Drag dei blocchi o dei parametri)
-        if (selectedController && activeBox) {
+        if (selectedController && currentDragTarget) {
           tempMatrix.identity().extractRotation(selectedController.matrixWorld);
           raycaster.ray.origin.setFromMatrixPosition(selectedController.matrixWorld);
           raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
 
-          if (activeBox.type === 'dragZone') {
-            if (currentDragTarget === 'menu') {
-              const targetPos = new THREE.Vector3().copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, 1.4).add(initialObjectOffset);
-              vrUiMesh.position.copy(targetPos);
-            } 
-            else if (currentDragTarget === 'axes') {
-              const targetPos = new THREE.Vector3().copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, 1.6).add(initialObjectOffset);
-              axesGroup.position.copy(targetPos);
-            }
+          if (currentDragTarget === 'menu') {
+            const targetPos = new THREE.Vector3().copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, 1.4).add(initialObjectOffset);
+            vrUiMesh.position.copy(targetPos);
           } 
-          else if (activeBox.type === 'slider') {
+          else if (currentDragTarget === 'axes') {
+            const targetPos = new THREE.Vector3().copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, 1.6).add(initialObjectOffset);
+            axesGroup.position.copy(targetPos);
+          } 
+          else if (currentDragTarget === 'slider' && activeBox && activeBox.type === 'slider') {
             const intersects = raycaster.intersectObject(vrUiMesh);
             if (intersects.length > 0) { handleVrInteraction(intersects[0].uv.x * 512); }
           }
