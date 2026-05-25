@@ -160,7 +160,7 @@
       scene.add(grid);
 
       const axesGroup = new THREE.Group();
-      axesGroup.position.set(0, 1.25, -0.5);
+      axesGroup.position.set(0, 1.4, -2.8);
       scene.add(axesGroup);
 
       let cosCurve = null;
@@ -323,7 +323,9 @@
       const raycaster = new THREE.Raycaster();
       const tempMatrix = new THREE.Matrix4();
       let selectedController = null;
-      let selectedMode = null;
+      let draggingUi = false;
+      const uiStartPos = new THREE.Vector3();
+      const controllerUiStartPos = new THREE.Vector3();
       const controllerStartQuat = new THREE.Quaternion();
       const axesStartQuat = new THREE.Quaternion();
       const controllerStartPos = new THREE.Vector3();
@@ -461,22 +463,22 @@
           const x = uv.x * 512;
           const y = (1 - uv.y) * 512;
           handleVrUiInteraction(x, y);
+          if (activeDragMode === 'menu') {
+            draggingUi = true;
+            selectedController = controller;
+            uiStartPos.copy(vrUiMesh.position);
+            controllerUiStartPos.setFromMatrixPosition(
+              controller.matrixWorld
+            );
+          }
+
           return;
-        }
-        const intersections = getControllerIntersections(controller);
-        if (intersections.length) {
-          selectedMode = 'transform';
-          selectedController = controller;
-          controllerStartQuat.copy(controller.quaternion);
-          axesStartQuat.copy(axesGroup.quaternion);
-          controllerStartPos.setFromMatrixPosition(controller.matrixWorld);
-          axesStartPos.copy(axesGroup.position);
         }
       }
 
       function onSelectEnd() {
+        draggingUi = false;
         selectedController = null;
-        selectedMode = null;
       }
 
       function handleVrUiInteraction(x, y) {
@@ -569,15 +571,6 @@
       }
 
       function render() {
-        if (selectedController && selectedMode === 'transform') {
-          const currentQuat = selectedController.quaternion.clone();
-          const deltaQuat = currentQuat.multiply(controllerStartQuat.clone().invert());
-          axesGroup.quaternion.copy(axesStartQuat).premultiply(deltaQuat);
-
-          const currentPos = new THREE.Vector3().setFromMatrixPosition(selectedController.matrixWorld);
-          const deltaPos = currentPos.clone().sub(controllerStartPos);
-          axesGroup.position.copy(axesStartPos).add(deltaPos);
-        }
         controllers.forEach(controller => {
           const uiHit = getUiIntersection(controller);
           const ray = controller.getObjectByName('ray');
@@ -587,6 +580,13 @@
             ray.material.color.set(0x88c8ff);
           }
         });
+        if (draggingUi && selectedController) {
+          const currentPos = new THREE.Vector3()
+            .setFromMatrixPosition(selectedController.matrixWorld);
+          const delta = currentPos.clone()
+            .sub(controllerUiStartPos);
+          vrUiMesh.position.copy(uiStartPos).add(delta);
+        }
         renderer.render(scene, camera);
       }
 
