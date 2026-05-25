@@ -283,7 +283,7 @@
       }
 
       const vrUiGeo = new THREE.PlaneGeometry(1.25, 1.25);
-      const vrUiMat = new THREE.MeshBasicMaterial({ map: vrUiTexture, side: THREE.DoubleSide, transparent: true });
+      const vrUiMat = new THREE.MeshBasicMaterial({ map: vrUiTexture, side: THREE.DoubleSide, transparent: true , depthTest: false });
       vrUiMesh = new THREE.Mesh(vrUiGeo, vrUiMat);
       vrUiMesh.position.set(-1.1, 1.35, -0.5);
       vrUiMesh.rotation.y = 0.35;
@@ -455,6 +455,14 @@
 
       function onSelectStart(event) {
         const controller = event.target;
+        const uiHit = getUiIntersection(controller);
+        if (uiHit && uiHit.uv) {
+          const uv = uiHit.uv;
+          const x = uv.x * 512;
+          const y = (1 - uv.y) * 512;
+          handleVrUiInteraction(x, y);
+          return;
+        }
         const intersections = getControllerIntersections(controller);
         if (intersections.length) {
           selectedMode = 'transform';
@@ -471,11 +479,87 @@
         selectedMode = null;
       }
 
+      function handleVrUiInteraction(x, y) {
+        for (const key in hitBoxes) {
+          const box = hitBoxes[key];
+          const inside =
+            x >= box.x &&
+            x <= box.x + box.w &&
+            y >= box.y &&
+            y <= box.y + box.h;
+          if (!inside) continue;
+          if (box.type === 'slider') {
+            const pct = (x - box.x) / box.w;
+            const value = box.min + pct * (box.max - box.min);
+            if (box.key === 'A') {
+              amplitude = value;
+              aSlider.value = value;
+              aValue.textContent = value.toFixed(2);
+            }
+            if (box.key === 'B') {
+              frequency = value;
+              bSlider.value = value;
+              bValue.textContent = value.toFixed(2);
+            }
+            updateCosCurve();
+            updateFunctionText();
+            drawVrUi();
+            return;
+          }
+          if (box.type === 'btn') {
+            switch (box.action) {
+              case 'camUp':
+                cameraRig.position.y += 0.15;
+                break;
+              case 'camDown':
+                cameraRig.position.y -= 0.15;
+                break;
+              case 'camLeft':
+                cameraRig.position.x -= 0.15;
+                break;
+              case 'camRight':
+                cameraRig.position.x += 0.15;
+                break;
+              case 'camZIn':
+                cameraRig.position.z -= 0.15;
+                break;
+              case 'camZOut':
+                cameraRig.position.z += 0.15;
+                break;
+            }
+            return;
+          }
+          if (box.type === 'mode') {
+            if (box.mode === 'menu') {
+              toggleDragMode('menu', document.getElementById('dragMenuBtn'));
+            }
+            if (box.mode === 'axes') {
+              toggleDragMode('axes', document.getElementById('dragAxesBtn'));
+            }
+            drawVrUi();
+            return;
+          }
+        }
+      }
+
       function getControllerIntersections(controller) {
         tempMatrix.identity().extractRotation(controller.matrixWorld);
         raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
         return raycaster.intersectObjects(axesGroup.children, true);
+      }
+
+      function getUiIntersection(controller) {
+        tempMatrix.identity().extractRotation(controller.matrixWorld);
+
+        raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+        raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+
+        const hits = raycaster.intersectObject(vrUiMesh);
+
+        if (hits.length === 0) return null;
+
+        return hits[0];
       }
 
       function onWindowResize() {
