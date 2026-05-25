@@ -578,6 +578,15 @@
           const deltaPos = currentPos.clone().sub(controllerStartPos);
           axesGroup.position.copy(axesStartPos).add(deltaPos);
         }
+        controllers.forEach(controller => {
+          const uiHit = getUiIntersection(controller);
+          const ray = controller.getObjectByName('ray');
+          if (uiHit) {
+            ray.material.color.set(0x22ff88);
+          } else {
+            ray.material.color.set(0x88c8ff);
+          }
+        });
         renderer.render(scene, camera);
       }
 
