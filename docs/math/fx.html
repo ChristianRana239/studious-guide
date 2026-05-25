@@ -134,9 +134,9 @@
         <div class="div"></div>
         <div class="sec-label">Istruzioni Interazione VR</div>
         <div class="info-vr">
-          • <strong>Telecamera</strong>: Muovi gli analogici del VR per spostarti o zoomare.<br>
-          • <strong>Sposta Menu / Assi</strong>: Punta il raggio laser su di loro, tieni premuto il grilletto e trascina.<br>
-          • <strong>Gabbia Virtuale</strong>: Gli assi hanno una bounding box protettiva per facilitare la presa.
+          • <strong>Volare / Spostarsi</strong>: Muovi gli analogici. Le mani ti seguiranno a specchio.<br>
+          • <strong>Sposta Menu / Assi</strong>: Punta il raggio laser, tieni premuto il grilletto e trascina.<br>
+          • <strong>Laser Intelligente</strong>: Diventa verde quando interseca un elemento agganciabile.
         </div>
       </div>
     </div>
@@ -162,8 +162,10 @@
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x02050a);
 
+      /* CAMERA RIG: Contiene la camera E i controller in modo che si muovano allineati */
       const cameraRig = new THREE.Group();
       scene.add(cameraRig);
+      
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 100);
       camera.position.set(0, 1.7, 3.8);
       cameraRig.add(camera);
@@ -182,7 +184,7 @@
       let paramA = 1, paramB = 1;
       let fxExpr = '2*x - 1/x';
       let fxCurve = null;
-      let currentDragTarget = null; // 'menu' | 'axes' | 'slider' | null
+      let currentDragTarget = null; 
 
       const axesGroup = new THREE.Group();
       axesGroup.position.copy(DEFAULT_AXES_POS);
@@ -234,9 +236,9 @@
         vrUiCtx.fillStyle = 'rgba(255,255,255,0.02)'; vrUiCtx.fillRect(40, 355, 432, 115);
         vrUiCtx.strokeStyle = 'rgba(80, 170, 255, 0.1)'; vrUiCtx.strokeRect(40, 355, 432, 115);
         vrUiCtx.fillStyle = '#a2cfff'; vrUiCtx.font = '11px monospace';
-        vrUiCtx.fillText('-> Trascina le aree vuote per spostare gli oggetti.', 55, 385);
-        vrUiCtx.fillText('-> Gli assi hanno una bounding box protettiva.', 55, 415);
-        vrUiCtx.fillText('-> Usa gli stick analogici per volare nella scena.', 55, 445);
+        vrUiCtx.fillText('-> Le mani rimangono sincronizzate durante il volo.', 55, 385);
+        vrUiCtx.fillText('-> Il raggio diventa verde sulle aree afferrabili.', 55, 415);
+        vrUiCtx.fillText('-> Usa gli stick analogici per muoverti liberamente.', 55, 445);
 
         vrUiTexture.needsUpdate = true;
       }
@@ -326,7 +328,7 @@
         axesGroup.add(fxCurve);
       }
 
-      /* ══ GENERAZIONE ASSI E BOUNDING BOX DEGLI ASSI ══ */
+      /* ══ GENERAZIONE ASSI CARTESIANI + BOUNDING BOX ══ */
       createAxes();
       updateAllViews();
 
@@ -346,7 +348,6 @@
         const zArrow = new THREE.Mesh(coneGeo, mZ); zArrow.rotation.x = Math.PI/2; zArrow.position.set(0, 0, length);
         axesGroup.add(xArrow, yArrow, zArrow);
 
-        // Bounding Box protettiva per rendere facile la presa in VR
         const boxGeo = new THREE.BoxGeometry(length, length, length);
         const boxMat = new THREE.MeshBasicMaterial({ color: 0x00aaff, wireframe: true, transparent: true, opacity: 0.04 });
         const boundingBoxMesh = new THREE.Mesh(boxGeo, boxMat);
@@ -354,10 +355,12 @@
         axesGroup.add(boundingBoxMesh);
       }
 
-      /* ══ LOGICA PUNTATORI E CONTROLLER VR ═════════════════ */
+      /* ══ LOGICA CONTROLLER ANCORATI AL CAMERA RIG ═════════ */
       const controllers = [renderer.xr.getController(0), renderer.xr.getController(1)];
       controllers.forEach((c) => {
-        scene.add(c);
+        // AGGANCIO AL RIG: Invece di aggiungerli direttamente alla scena, li aggiungiamo al rig
+        // In questo modo, quando il rig si sposta tramite analogici, le mani si muovono allineate alla camera
+        cameraRig.add(c);
         c.addEventListener('selectstart', onSelectStart);
         c.addEventListener('selectend', onSelectEnd);
         
@@ -439,8 +442,8 @@
         }
       }
 
-      /* ══ GESTIONE ANALOGICI VR (CAM MOVEMENT) ═══════════════ */
-      const CAM_STICK_SPEED = 0.04;
+      /* ══ GESTIONE ANALOGICI VR (FLIGHT SYSTEM WITH SYNCED HANDS) ════ */
+      const CAM_STICK_SPEED = 0.05;
       
       function processGamepadInputs() {
         const session = renderer.xr.getSession();
@@ -470,7 +473,7 @@
       renderer.setAnimationLoop(() => {
         processGamepadInputs();
 
-        // Feedback Laser Dinamico del Controller
+        // Ricalcola lo stato dei puntatori laser ad ogni frame
         controllers.forEach(c => {
           tempMatrix.identity().extractRotation(c.matrixWorld);
           raycaster.ray.origin.setFromMatrixPosition(c.matrixWorld);
