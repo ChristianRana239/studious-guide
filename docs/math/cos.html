@@ -5,109 +5,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cos Plot XR</title>
     <style>
-      body,
-      html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body, html {
+        width: 100%; height: 100%;
         overflow: hidden;
-        background: #050a18;
-        color: #f4f8ff;
-        font-family: system-ui, sans-serif;
+        background: #0a0e18;
+        color: #e8f4ff;
+        font-family: 'JetBrains Mono', monospace;
       }
 
-      #info {
+      #screenPanel {
         position: absolute;
-        left: 1rem;
-        right: 1rem;
-        top: 1rem;
+        left: 1.2rem; top: 1.2rem;
+        width: 340px;
         z-index: 10;
-        padding: 0.9rem 1rem;
-        background: rgba(2, 8, 25, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 0.85rem;
-        line-height: 1.55;
-        font-size: 0.95rem;
+        border-radius: 16px;
+        overflow-y: auto;
+        max-height: calc(100vh - 2.4rem);
+        background: rgba(10, 14, 24, 0.93);
+        border: 1px solid rgba(147, 112, 219, 0.3);
+        backdrop-filter: blur(30px) saturate(1.8);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       }
 
-      #info strong {
-        display: block;
-        margin-bottom: 0.4rem;
-        font-size: 1.05rem;
+      #screenPanel::before {
+        content: ''; display: block; height: 3px;
+        background: #8b5cf6;
       }
 
-      #sliderContainer {
-        margin-top: 0.8rem;
-        display: flex;
-        gap: 0.6rem;
-        align-items: center;
-      }
+      .panel-inner { padding: 1rem; }
+      .ph { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
+      .ph-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.95rem; color: #a78bfa; letter-spacing: 0.04em; text-transform: uppercase; }
+      .ph-sub { font-size: 0.65rem; color: rgba(167, 139, 250, 0.45); }
+      
+      .sec-label { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(34, 197, 94, 0.6); margin-bottom: 0.5rem; margin-top: 0.8rem; }
 
-      #sliderLabel {
-        min-width: 50px;
-        font-size: 0.9rem;
-        font-weight: 500;
-      }
+      .sr { display: grid; grid-template-columns: 24px 1fr 46px; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; }
+      .sn { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.8rem; text-align: center; }
+      .sn.a  { color: #c084fc; }
+      .sn.b  { color: #22c55e; }
+      .sv { font-size: 0.72rem; text-align: right; color: rgba(180, 220, 255, 0.6); }
 
       input[type='range'] {
-        flex: 1;
-        height: 6px;
-        border-radius: 3px;
-        background: #1a3a5c;
-        outline: none;
-        -webkit-appearance: none;
+        -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(30, 40, 70, 0.8); outline: none;
       }
+      #aSlider { background: linear-gradient(90deg, rgba(139, 92, 246, 0.5) var(--pct,50%), rgba(30, 40, 70, 0.8) var(--pct,50%)); }
+      #bSlider { background: linear-gradient(90deg, rgba(34, 197, 94, 0.5) var(--pct,50%), rgba(30, 40, 70, 0.8) var(--pct,50%)); }
+      input[type='range']::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#a78bfa; cursor:pointer; box-shadow: 0 0 6px rgba(167, 139, 250, 0.5); }
+      input[type='range']::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#a78bfa; cursor:pointer; border: none; box-shadow: 0 0 6px rgba(167, 139, 250, 0.5); }
 
-      input[type='range']::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: #88c8ff;
-        cursor: pointer;
-        box-shadow: 0 0 8px rgba(136, 200, 255, 0.6);
-      }
+      .div { height: 1px; background: rgba(147, 112, 219, 0.2); margin: 0.8rem 0; }
 
-      input[type='range']::-moz-range-thumb {
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: #88c8ff;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 0 8px rgba(136, 200, 255, 0.6);
+      .cam-pad { display: flex; align-items: center; justify-content: center; margin: 0.5rem auto 0; width: 110px; height: 110px; position: relative; }
+      .cam-btn {
+        position: absolute; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.35);
+        color: #60a5fa; font-size: 0.85rem; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
       }
+      .cam-up { top: 0; left: 41px; } .cam-down { bottom: 0; left: 41px; }
+      .cam-left { left: 0; top: 41px; } .cam-right { right: 0; top: 41px; }
+      .cam-z-in { right: 0; top: 0; font-weight: bold; } .cam-z-out { left: 0; top: 0; font-weight: bold; }
+      .cam-center { position: absolute; top: 38px; left: 38px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 50%; color: #22c55e; }
 
-      #xValue {
-        min-width: 60px;
-        text-align: right;
-        font-family: monospace;
-        font-size: 0.9rem;
-        color: #ffd568;
+      .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.6rem; }
+      .act-btn {
+        background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 6px;
+        padding: 0.45rem; color: #60a5fa; font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; font-weight: bold;
+        text-align: center; cursor: pointer; text-transform: uppercase;
       }
+      .act-btn.active { background: rgba(139, 92, 246, 0.25); border-color: #a78bfa; color: #fff; box-shadow: 0 0 10px rgba(167, 139, 250, 0.3); }
 
-      canvas {
-        display: block;
-      }
+      canvas { display: block; }
     </style>
   </head>
   <body>
-    <div id="info">
-      <strong>Cos Plot XR</strong>
-      <div id="sliderContainer">
-        <span id="sliderLabel">A:</span>
-        <input type="range" id="aSlider" min="-5" max="5" step="0.01" value="1" />
-        <span id="aValue">1.00</span>
+
+    <div id="screenPanel">
+      <div class="panel-inner">
+        <div class="ph">
+          <div class="ph-title">Cos Plot XR</div>
+          <div class="ph-sub">Pavlyk, Yu, Hu</div>
+        </div>
+
+        <div class="div"></div>
+        <div class="sec-label">Parametri Dinamici</div>
+        <div class="sr"><span class="sn a">A</span><input type="range" id="aSlider" min="-5" max="5" step="0.1" value="1" /><span class="sv" id="aValue">1.0</span></div>
+        <div class="sr"><span class="sn b">B</span><input type="range" id="bSlider" min="0" max="5" step="0.1" value="1" /><span class="sv" id="bValue">1.0</span></div>
+
+        <div style="margin-top: 0.8rem; font-family: monospace; font-size: 0.85rem; color: #a78bfa;">y = <span id="functionDisplay">1.0</span> · cos(<span id="frequencyDisplay">1.0</span> · x)</div>
+
+        <div class="div"></div>
+        <div class="sec-label" style="text-align: center;">Muovi Visuale (Camera)</div>
+        <div class="cam-pad">
+          <button class="cam-btn cam-up" id="camUp">▲</button>
+          <button class="cam-btn cam-down" id="camDown">▼</button>
+          <button class="cam-btn cam-left" id="camLeft">◀</button>
+          <button class="cam-btn cam-right" id="camRight">▶</button>
+          <button class="cam-btn cam-z-in" id="camZIn">＋</button>
+          <button class="cam-btn cam-z-out" id="camZOut">─</button>
+          <div class="cam-center">📷</div>
+        </div>
+
+        <div class="div"></div>
+        <div class="sec-label">Blocco/Sblocco Spostamenti</div>
+        <div class="action-grid">
+          <button class="act-btn" id="dragMenuBtn">SBLOCCA MENU</button>
+          <button class="act-btn" id="dragAxesBtn">SBLOCCA ASSI</button>
+        </div>
+
+        <div class="div"></div>
+        <p style="font-size: 0.75rem; color: rgba(167, 139, 250, 0.6); line-height: 1.4; margin: 0.6rem 0;">Viene mostrato un grafico 3D del coseno. Usa i controller VR per trascinare i cursori e gli assi. Accedi ai controlli della camera per muoverti nello spazio.</p>
       </div>
-      <div id="sliderContainer" style="margin-top:0.4rem;">
-        <span id="sliderLabel">B:</span>
-        <input type="range" id="bSlider" min="0" max="5" step="0.01" value="1" />
-        <span id="bValue">1.00</span>
-      </div>
-      <div id="functionText" style="margin-top:0.6rem; font-family: monospace; color: #ffd568;">y = 1.00 * cos(1.00 * x)</div>
-      <p style="margin-top: 0.6rem; margin-bottom: 0;">Viene mostrato un grafico 3D del coseno con assi x, y e z. Usa un controller VR connesso e il grilletto select per ruotare e spostare il gruppo di assi.</p>
     </div>
     <script type="module">
       import * as THREE from '../vendor/three/build/three.module.js';
@@ -122,10 +133,13 @@
       document.body.appendChild(VRButton.createButton(renderer));
 
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x050a18);
+      scene.background = new THREE.Color(0x0a0e18);
 
+      const cameraRig = new THREE.Group();
+      scene.add(cameraRig);
       const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 100);
       camera.position.set(0, 1.8, 4);
+      cameraRig.add(camera);
 
       const ambientLight = new THREE.HemisphereLight(0xffffff, 0x202035, 0.9);
       scene.add(ambientLight);
@@ -152,14 +166,156 @@
       let cosCurve = null;
       let amplitude = 1.0;
       let frequency = 1.0;
+      let activeDragMode = null;
 
       createAxes();
       cosCurve = createCosCurve(amplitude, frequency);
-
-      const sliderGroup = createVRSlider();
-      scene.add(sliderGroup);
-      updateSliderThumbs();
       updateFunctionText();
+
+      // VR UI Canvas Panel
+      let vrUiMesh;
+      const vrUiCanvas = document.createElement('canvas');
+      vrUiCanvas.width = 512;
+      vrUiCanvas.height = 512;
+      const vrUiCtx = vrUiCanvas.getContext('2d');
+      const vrUiTexture = new THREE.CanvasTexture(vrUiCanvas);
+
+      const hitBoxes = {
+        sliderA:  { x: 40, y: 110, w: 432, h: 35, min: -5, max: 5, type: 'slider', key: 'A' },
+        sliderB:  { x: 40, y: 190, w: 432, h: 35, min: 0, max: 5, type: 'slider', key: 'B' },
+        btnUp:    { x: 236, y: 325, w: 40, h: 34, type: 'btn', action: 'camUp' },
+        btnDown:  { x: 236, y: 405, w: 40, h: 34, type: 'btn', action: 'camDown' },
+        btnLeft:  { x: 186, y: 365, w: 40, h: 34, type: 'btn', action: 'camLeft' },
+        btnRight: { x: 286, y: 365, w: 40, h: 34, type: 'btn', action: 'camRight' },
+        btnZIn:   { x: 346, y: 365, w: 40, h: 34, type: 'btn', action: 'camZIn' },
+        btnZOut:  { x: 126, y: 365, w: 40, h: 34, type: 'btn', action: 'camZOut' },
+        modeMenu: { x: 40,  y: 460, w: 206, h: 38, type: 'mode', mode: 'menu' },
+        modeAxes: { x: 266, y: 460, w: 206, h: 38, type: 'mode', mode: 'axes' }
+      };
+
+      function drawVrUi() {
+        vrUiCtx.fillStyle = '#0a0e18';
+        vrUiCtx.fillRect(0, 0, 512, 512);
+        
+        // Purple border
+        vrUiCtx.strokeStyle = '#8b5cf6';
+        vrUiCtx.lineWidth = 6;
+        vrUiCtx.strokeRect(3, 3, 506, 506);
+
+        // Title
+        vrUiCtx.fillStyle = '#a78bfa';
+        vrUiCtx.font = 'bold 24px sans-serif';
+        vrUiCtx.fillText('Cos Plot XR', 40, 50);
+
+        // Decoration line
+        vrUiCtx.fillStyle = '#8b5cf6';
+        vrUiCtx.fillRect(40, 65, 432, 2);
+
+        // Slider A label
+        vrUiCtx.fillStyle = '#c084fc';
+        vrUiCtx.font = '16px monospace';
+        vrUiCtx.fillText(`Amplitude A: ${amplitude.toFixed(2)}`, 40, 100);
+        drawCanvasSlider(hitBoxes.sliderA, amplitude, '#c084fc');
+
+        // Slider B label
+        vrUiCtx.fillStyle = '#22c55e';
+        vrUiCtx.fillText(`Frequency B: ${frequency.toFixed(2)}`, 40, 180);
+        drawCanvasSlider(hitBoxes.sliderB, frequency, '#22c55e');
+
+        // Formula display
+        vrUiCtx.fillStyle = '#a78bfa';
+        vrUiCtx.font = 'italic 14px monospace';
+        vrUiCtx.fillText(`y = ${amplitude.toFixed(2)} · cos(${frequency.toFixed(2)} · x)`, 40, 250);
+
+        // Camera controls label
+        vrUiCtx.fillStyle = 'rgba(167, 139, 250, 0.7)';
+        vrUiCtx.font = 'bold 12px sans-serif';
+        vrUiCtx.fillText('CAMERA CONTROL X / Y / Z', 40, 318);
+
+        drawCanvasBtn(hitBoxes.btnUp, '▲');
+        drawCanvasBtn(hitBoxes.btnDown, '▼');
+        drawCanvasBtn(hitBoxes.btnLeft, '◀');
+        drawCanvasBtn(hitBoxes.btnRight, '▶');
+        drawCanvasBtn(hitBoxes.btnZIn, '＋');
+        drawCanvasBtn(hitBoxes.btnZOut, '─');
+        vrUiCtx.fillStyle = '#22c55e';
+        vrUiCtx.font = '22px sans-serif';
+        vrUiCtx.fillText('📷', 243, 390);
+
+        drawModeBtn(hitBoxes.modeMenu, 'UNLOCK MENU', activeDragMode === 'menu');
+        drawModeBtn(hitBoxes.modeAxes, 'UNLOCK AXES', activeDragMode === 'axes');
+
+        vrUiTexture.needsUpdate = true;
+      }
+
+      function drawCanvasSlider(box, val, color) {
+        vrUiCtx.fillStyle = 'rgba(30, 40, 70, 0.6)';
+        vrUiCtx.fillRect(box.x, box.y + 14, box.w, 6);
+        const pct = (val - box.min) / (box.max - box.min);
+        vrUiCtx.fillStyle = color;
+        vrUiCtx.fillRect(box.x, box.y + 14, box.w * pct, 6);
+        vrUiCtx.fillStyle = '#ffffff';
+        vrUiCtx.beginPath();
+        vrUiCtx.arc(box.x + (box.w * pct), box.y + 17, 9, 0, Math.PI * 2);
+        vrUiCtx.fill();
+      }
+
+      function drawCanvasBtn(box, text) {
+        vrUiCtx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+        vrUiCtx.fillRect(box.x, box.y, box.w, box.h);
+        vrUiCtx.strokeStyle = '#3b82f6';
+        vrUiCtx.lineWidth = 1.5;
+        vrUiCtx.strokeRect(box.x, box.y, box.w, box.h);
+        vrUiCtx.fillStyle = '#60a5fa';
+        vrUiCtx.font = 'bold 16px sans-serif';
+        vrUiCtx.fillText(text, box.x + 12, box.y + 23);
+      }
+
+      function drawModeBtn(box, text, isUnlocked) {
+        vrUiCtx.fillStyle = isUnlocked ? 'rgba(34, 197, 94, 0.2)' : 'rgba(139, 92, 246, 0.08)';
+        vrUiCtx.fillRect(box.x, box.y, box.w, box.h);
+        vrUiCtx.strokeStyle = isUnlocked ? '#22c55e' : '#8b5cf6';
+        vrUiCtx.lineWidth = 2;
+        vrUiCtx.strokeRect(box.x, box.y, box.w, box.h);
+        vrUiCtx.fillStyle = isUnlocked ? '#34d399' : '#a78bfa';
+        vrUiCtx.font = 'bold 13px sans-serif';
+        vrUiCtx.fillText(text, box.x + 20, box.y + 24);
+      }
+
+      const vrUiGeo = new THREE.PlaneGeometry(1.25, 1.25);
+      const vrUiMat = new THREE.MeshBasicMaterial({ map: vrUiTexture, side: THREE.DoubleSide, transparent: true });
+      vrUiMesh = new THREE.Mesh(vrUiGeo, vrUiMat);
+      vrUiMesh.position.set(-1.1, 1.35, -0.5);
+      vrUiMesh.rotation.y = 0.35;
+      scene.add(vrUiMesh);
+
+      const aSlider = document.getElementById('aSlider');
+      const aValue = document.getElementById('aValue');
+      aSlider.addEventListener('input', onSliderChange);
+      const bSlider = document.getElementById('bSlider');
+      const bValue = document.getElementById('bValue');
+      bSlider.addEventListener('input', onSliderChange);
+
+      document.getElementById('camUp').addEventListener('click', () => { cameraRig.position.y += 0.15; });
+      document.getElementById('camDown').addEventListener('click', () => { cameraRig.position.y -= 0.15; });
+      document.getElementById('camLeft').addEventListener('click', () => { cameraRig.position.x -= 0.15; });
+      document.getElementById('camRight').addEventListener('click', () => { cameraRig.position.x += 0.15; });
+      document.getElementById('camZIn').addEventListener('click', () => { cameraRig.position.z -= 0.15; });
+      document.getElementById('camZOut').addEventListener('click', () => { cameraRig.position.z += 0.15; });
+
+      document.getElementById('dragMenuBtn').addEventListener('click', () => toggleDragMode('menu', document.getElementById('dragMenuBtn')));
+      document.getElementById('dragAxesBtn').addEventListener('click', () => toggleDragMode('axes', document.getElementById('dragAxesBtn')));
+
+      function toggleDragMode(mode, btnEl) {
+        if (activeDragMode === mode) {
+          activeDragMode = null;
+          btnEl.classList.remove('active');
+        } else {
+          activeDragMode = mode;
+          btnEl.classList.add('active');
+        }
+        drawVrUi();
+      }
 
       const controllers = [createController(0), createController(1)];
       controllers.forEach((controller) => scene.add(controller));
@@ -172,15 +328,6 @@
       const axesStartQuat = new THREE.Quaternion();
       const controllerStartPos = new THREE.Vector3();
       const axesStartPos = new THREE.Vector3();
-      let sliderStartX = 0;
-      let sliderStartOffset = 0;
-
-      const aSlider = document.getElementById('aSlider');
-      const aValue = document.getElementById('aValue');
-      aSlider.addEventListener('input', onSliderChange);
-      const bSlider = document.getElementById('bSlider');
-      const bValue = document.getElementById('bValue');
-      bSlider.addEventListener('input', onSliderChange);
 
       window.addEventListener('resize', onWindowResize);
       renderer.setAnimationLoop(render);
@@ -191,8 +338,8 @@
         aValue.textContent = amplitude.toFixed(2);
         bValue.textContent = frequency.toFixed(2);
         updateCosCurve();
-        updateSliderThumbs();
         updateFunctionText();
+        drawVrUi();
       }
 
       function updateCosCurve() {
@@ -201,8 +348,6 @@
         }
         cosCurve = createCosCurve(amplitude, frequency);
       }
-
-      
 
       function createAxes() {
         const material = new THREE.MeshStandardMaterial({ color: 0x88c8ff, roughness: 0.3, metalness: 0.2 });
@@ -312,21 +457,12 @@
         const controller = event.target;
         const intersections = getControllerIntersections(controller);
         if (intersections.length) {
-          const hitObject = intersections[0].object;
-          if (hitObject.name === 'aThumb' || hitObject.name === 'aTrack') {
-            selectedMode = 'vrSliderA';
-            selectedController = controller;
-          } else if (hitObject.name === 'bThumb' || hitObject.name === 'bTrack') {
-            selectedMode = 'vrSliderB';
-            selectedController = controller;
-          } else {
-            selectedMode = 'transform';
-            selectedController = controller;
-            controllerStartQuat.copy(controller.quaternion);
-            axesStartQuat.copy(axesGroup.quaternion);
-            controllerStartPos.setFromMatrixPosition(controller.matrixWorld);
-            axesStartPos.copy(axesGroup.position);
-          }
+          selectedMode = 'transform';
+          selectedController = controller;
+          controllerStartQuat.copy(controller.quaternion);
+          axesStartQuat.copy(axesGroup.quaternion);
+          controllerStartPos.setFromMatrixPosition(controller.matrixWorld);
+          axesStartPos.copy(axesGroup.position);
         }
       }
 
@@ -339,7 +475,7 @@
         tempMatrix.identity().extractRotation(controller.matrixWorld);
         raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-        return raycaster.intersectObjects(sliderGroup.children, true).concat(raycaster.intersectObjects(axesGroup.children, true));
+        return raycaster.intersectObjects(axesGroup.children, true);
       }
 
       function onWindowResize() {
@@ -357,102 +493,23 @@
           const currentPos = new THREE.Vector3().setFromMatrixPosition(selectedController.matrixWorld);
           const deltaPos = currentPos.clone().sub(controllerStartPos);
           axesGroup.position.copy(axesStartPos).add(deltaPos);
-        } else if (selectedController && (selectedMode === 'vrSliderA' || selectedMode === 'vrSliderB')) {
-          tempMatrix.identity().extractRotation(selectedController.matrixWorld);
-          raycaster.ray.origin.setFromMatrixPosition(selectedController.matrixWorld);
-          raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-          const sliderIntersections = raycaster.intersectObjects(sliderGroup.children, true);
-          if (sliderIntersections.length) {
-            const point = sliderIntersections[0].point;
-            const minX = -3.14;
-            const maxX = 3.14;
-            const trackLength = maxX - minX;
-            const normalized = (point.x - minX) / trackLength;
-            if (selectedMode === 'vrSliderA') {
-              const minA = -5.0;
-              const maxA = 5.0;
-              amplitude = minA + normalized * (maxA - minA);
-              amplitude = Math.max(minA, Math.min(maxA, amplitude));
-              aSlider.value = amplitude;
-              aValue.textContent = amplitude.toFixed(2);
-              updateCosCurve();
-              updateSliderThumbs();
-              updateFunctionText();
-            } else {
-              const minB = 0.0;
-              const maxB = 5.0;
-              frequency = minB + normalized * (maxB - minB);
-              frequency = Math.max(minB, Math.min(maxB, frequency));
-              bSlider.value = frequency;
-              bValue.textContent = frequency.toFixed(2);
-              updateCosCurve();
-              updateSliderThumbs();
-              updateFunctionText();
-            }
-          }
         }
         renderer.render(scene, camera);
       }
 
       function updateFunctionText() {
-        const el = document.getElementById('functionText');
+        const el = document.getElementById('functionDisplay');
         if (el) {
-          el.textContent = `y = ${amplitude.toFixed(2)} * cos(${frequency.toFixed(2)} * x)`;
+          el.textContent = amplitude.toFixed(2);
+        }
+        const el2 = document.getElementById('frequencyDisplay');
+        if (el2) {
+          el2.textContent = frequency.toFixed(2);
         }
       }
 
-      function createVRSlider() {
-        const group = new THREE.Group();
-        group.position.set(0, 0.5, 0.2);
-
-        const minX = -3.14;
-        const maxX = 3.14;
-        const trackLength = maxX - minX;
-
-        // A track (amplitude)
-        const trackAGeom = new THREE.BoxGeometry(trackLength, 0.06, 0.06);
-        const trackMat = new THREE.MeshStandardMaterial({ color: 0x1a3a5c, roughness: 0.8, metalness: 0.2 });
-        const trackA = new THREE.Mesh(trackAGeom, trackMat);
-        trackA.name = 'aTrack';
-        trackA.position.set((minX + maxX) / 2, 0.02, 0);
-        group.add(trackA);
-
-        const thumbGeom = new THREE.BoxGeometry(0.18, 0.15, 0.15);
-        const thumbMat = new THREE.MeshStandardMaterial({ color: 0x88c8ff, roughness: 0.3, metalness: 0.6, emissive: 0x44a0ff, emissiveIntensity: 0.3 });
-        const aThumb = new THREE.Mesh(thumbGeom, thumbMat);
-        aThumb.name = 'aThumb';
-        aThumb.position.set(0, 0.02, 0);
-        group.add(aThumb);
-
-        // B track (frequency) slightly below
-        const trackB = new THREE.Mesh(trackAGeom.clone(), trackMat.clone());
-        trackB.name = 'bTrack';
-        trackB.position.set((minX + maxX) / 2, -0.18, 0);
-        group.add(trackB);
-
-        const bThumb = new THREE.Mesh(thumbGeom.clone(), thumbMat.clone());
-        bThumb.name = 'bThumb';
-        bThumb.position.set(0, -0.18, 0);
-        group.add(bThumb);
-
-        return group;
-      }
-
-      function updateSliderThumbs() {
-        const aThumb = sliderGroup.getObjectByName('aThumb');
-        const bThumb = sliderGroup.getObjectByName('bThumb');
-        const minX = -3.14;
-        const maxX = 3.14;
-        const trackLength = maxX - minX;
-        if (aThumb) {
-          const normalizedA = (amplitude - (-5.0)) / (5.0 - (-5.0));
-          aThumb.position.x = minX + normalizedA * trackLength;
-        }
-        if (bThumb) {
-          const normalizedB = frequency / 5.0;
-          bThumb.position.x = minX + normalizedB * trackLength;
-        }
-      }
+      // Initial draw
+      drawVrUi();
     </script>
   </body>
 </html>
