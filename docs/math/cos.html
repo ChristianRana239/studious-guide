@@ -111,6 +111,14 @@
 
         <div class="div"></div>
         <p style="font-size: 0.75rem; color: rgba(167, 139, 250, 0.6); line-height: 1.4; margin: 0.6rem 0;">Viene mostrato un grafico 3D del coseno. Usa i controller VR per trascinare i cursori e gli assi. Accedi ai controlli della camera per muoverti nello spazio.</p>
+        <div class="div"></div>
+          <div class="sec-label">Video Guida</div>
+
+          <div class="action-grid">
+            <a class="act-btn" href="https://youtube.com" target="_blank">
+              OPEN YOUTUBE
+            </a>
+          </div>
       </div>
     </div>
     <script type="module">
@@ -182,7 +190,8 @@
         btnRight: { x: 286, y: 365, w: 40, h: 34, type: 'btn', action: 'camRight' },
         btnZIn:   { x: 346, y: 365, w: 40, h: 34, type: 'btn', action: 'camZIn' },
         btnZOut:  { x: 126, y: 365, w: 40, h: 34, type: 'btn', action: 'camZOut' },
-        modeMenu: { x: 153,  y: 460, w: 206, h: 38, type: 'mode', mode: 'menu' }
+        modeMenu: { x: 153,  y: 460, w: 206, h: 38, type: 'mode', mode: 'menu' },
+        videoBtn: { x: 153, y: 410, w: 206, h: 38, type: 'link', url: 'https://youtube.com' }
       };
 
       function drawVrUi() {
@@ -235,7 +244,7 @@
         vrUiCtx.fillText('📷', 243, 390);
 
         drawModeBtn(hitBoxes.modeMenu, 'SBLOCCA MENU', activeDragMode === 'menu');
-
+        drawLinkBtn(hitBoxes.videoBtn, 'YOUTUBE GUIDE');
         vrUiTexture.needsUpdate = true;
       }
 
@@ -260,6 +269,19 @@
         vrUiCtx.fillStyle = '#60a5fa';
         vrUiCtx.font = 'bold 16px sans-serif';
         vrUiCtx.fillText(text, box.x + 12, box.y + 23);
+      }
+
+      function drawLinkBtn(box, text) {
+        vrUiCtx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+        vrUiCtx.fillRect(box.x, box.y, box.w, box.h);
+
+        vrUiCtx.strokeStyle = '#ef4444';
+        vrUiCtx.lineWidth = 2;
+        vrUiCtx.strokeRect(box.x, box.y, box.w, box.h);
+
+        vrUiCtx.fillStyle = '#f87171';
+        vrUiCtx.font = 'bold 13px sans-serif';
+        vrUiCtx.fillText(text, box.x + 40, box.y + 24);
       }
 
       function drawModeBtn(box, text, isUnlocked) {
@@ -523,6 +545,10 @@
               frequency = value;
               bSlider.value = value;
               bValue.textContent = value.toFixed(2);
+            }
+            if (box.type === 'link') {
+              window.open(box.url, '_blank');
+              return;
             }
             updateCosCurve();
             updateFunctionText();
