@@ -280,6 +280,19 @@
       vrUiMesh.rotation.y = 0.35;
       scene.add(vrUiMesh);
 
+      vrUiMesh.visible = false;
+      const screenPanel = document.getElementById('screenPanel');
+
+      renderer.xr.addEventListener('sessionstart', () => {
+        vrUiMesh.visible = true;
+        screenPanel.style.display = 'none';
+      });
+
+      renderer.xr.addEventListener('sessionend', () => {
+        vrUiMesh.visible = false;
+        screenPanel.style.display = 'block';
+      });
+
       const aSlider = document.getElementById('aSlider');
       const aValue = document.getElementById('aValue');
       aSlider.addEventListener('input', onSliderChange);
