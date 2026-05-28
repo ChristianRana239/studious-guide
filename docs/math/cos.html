@@ -546,13 +546,13 @@
               bSlider.value = value;
               bValue.textContent = value.toFixed(2);
             }
-            if (box.type === 'link') {
-              window.open(box.url, '_blank');
-              return;
-            }
             updateCosCurve();
             updateFunctionText();
             drawVrUi();
+            return;
+          }
+          if (box.type === 'link') {
+            window.open(box.url, '_blank');
             return;
           }
           if (box.type === 'btn') {
