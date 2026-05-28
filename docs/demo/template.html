@@ -185,13 +185,14 @@
       const orbColors = [0x88c8ff, 0xc4a3ff, 0x68e8b0, 0xffd568];
       for (let i = 0; i < 12; i++) {
         const r = 0.08 + Math.random() * 0.18;
+        const baseColor = orbColors[i % orbColors.length];
         const orb = new THREE.Mesh(
           new THREE.SphereGeometry(r, 20, 16),
           new THREE.MeshStandardMaterial({
-            color: orbColors[i % orbColors.length],
+            color: baseColor,
             roughness: 0.15,
             metalness: 0.8,
-            emissive: orbColors[i % orbColors.length],
+            emissive: baseColor,
             emissiveIntensity: 0.25
           })
         );
@@ -201,12 +202,21 @@
           (Math.random() - 0.5) * 14
         );
         orb.userData.floatOffset = Math.random() * Math.PI * 2;
-        orb.userData.floatSpeed = 0.3 + Math.random() * 0.5;
+        orb.userData.floatSpeed  = 0.3 + Math.random() * 0.5;
+        orb.userData.baseColor   = baseColor;
+        orb.userData.hovered     = false;
         scene.add(orb);
       }
 
-      // Collect orbs for animation
+      // Collect orbs for animation and raycasting
       const orbs = scene.children.filter(c => c.userData.floatOffset !== undefined);
+
+      // Reusable raycaster for hover detection
+      const rayHover    = new THREE.Raycaster();
+      const _rayOrigin  = new THREE.Vector3();
+      const _rayDir     = new THREE.Vector3();
+      const _tempMat    = new THREE.Matrix4();
+      const _lightColor = new THREE.Color();
 
       // ─── Controller ray visuals ───────────────────────────────────────────────
       function buildControllerRay(controller) {
@@ -243,6 +253,44 @@
 
       buildControllerRay(controller0);
       buildControllerRay(controller1);
+
+      // ─── Orb hover via raycasts ───────────────────────────────────────────────
+      function checkOrbHover() {
+        // Collect all hit orbs from both controllers this frame
+        const hitOrbs = new Set();
+
+        for (const ctrl of [controller0, controller1]) {
+          if (!ctrl.matrixWorld) continue;
+          _tempMat.identity().extractRotation(ctrl.matrixWorld);
+          _rayOrigin.setFromMatrixPosition(ctrl.matrixWorld);
+          _rayDir.set(0, 0, -1).applyMatrix4(_tempMat);
+          rayHover.set(_rayOrigin, _rayDir);
+
+          const hits = rayHover.intersectObjects(orbs, false);
+          if (hits.length > 0) hitOrbs.add(hits[0].object);
+        }
+
+        // Apply / remove highlight on each orb
+        for (const orb of orbs) {
+          const mat = orb.material;
+          const nowHovered = hitOrbs.has(orb);
+          if (nowHovered === orb.userData.hovered) continue; // no change
+          orb.userData.hovered = nowHovered;
+
+          if (nowHovered) {
+            // Lighten: boost emissive intensity and tint color toward white
+            _lightColor.set(orb.userData.baseColor).lerp(new THREE.Color(0xffffff), 0.45);
+            mat.color.copy(_lightColor);
+            mat.emissive.copy(_lightColor);
+            mat.emissiveIntensity = 0.9;
+          } else {
+            // Restore base appearance
+            mat.color.set(orb.userData.baseColor);
+            mat.emissive.set(orb.userData.baseColor);
+            mat.emissiveIntensity = 0.25;
+          }
+        }
+      }
 
       // ─── Locomotion via XR reference space offset ────────────────────────────
       // In WebXR the HMD pose is injected directly into the camera by Three.js,
@@ -342,6 +390,9 @@
             } catch(e) { /* XRRigidTransform not yet available, skip */ }
           }
         }
+
+        // Orb hover highlight
+        checkOrbHover();
 
         renderer.render(scene, camera);
       });
