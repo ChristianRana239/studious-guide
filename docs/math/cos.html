@@ -552,7 +552,14 @@
             return;
           }
           if (box.type === 'link') {
-            window.open(box.url, '_blank');
+            const session = renderer.xr.getSession();
+            if (session) {
+              session.end().then(() => {
+                window.location.href = box.url;
+              });
+            } else {
+              window.location.href = box.url;
+            }
             return;
           }
           if (box.type === 'btn') {
