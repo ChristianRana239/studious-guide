@@ -177,7 +177,7 @@
       let vrUiMesh;
       const vrUiCanvas = document.createElement('canvas');
       vrUiCanvas.width = 512;
-      vrUiCanvas.height = 768;
+      vrUiCanvas.height = 600;
       const vrUiCtx = vrUiCanvas.getContext('2d');
       const vrUiTexture = new THREE.CanvasTexture(vrUiCanvas);
 
@@ -190,18 +190,18 @@
         btnRight: { x: 286, y: 365, w: 40, h: 34, type: 'btn', action: 'camRight' },
         btnZIn:   { x: 346, y: 365, w: 40, h: 34, type: 'btn', action: 'camZIn' },
         btnZOut:  { x: 126, y: 365, w: 40, h: 34, type: 'btn', action: 'camZOut' },
-        videoBtn: { x: 153, y: 560, w: 206, h: 38, type: 'link', url: 'https://www.youtube.com' },
-        modeMenu: { x: 153, y: 620, w: 206, h: 38, type: 'mode', mode: 'menu' }
+        videoBtn: { x: 153, y: 460, w: 206, h: 38, type: 'link', url: 'https://www.youtube.com' },
+        modeMenu: { x: 153, y: 520, w: 206, h: 38, type: 'mode', mode: 'menu' }
       };
 
       function drawVrUi() {
         vrUiCtx.fillStyle = '#0a0e18';
-        vrUiCtx.fillRect(0, 0, 512, 768);
+        vrUiCtx.fillRect(0, 0, 512, 600);
         
         // Purple border
         vrUiCtx.strokeStyle = '#8b5cf6';
         vrUiCtx.lineWidth = 6;
-        vrUiCtx.strokeRect(3, 3, 506, 762);
+        vrUiCtx.strokeRect(3, 3, 506, 594);
 
         // Title
         vrUiCtx.fillStyle = '#a78bfa';
@@ -295,7 +295,7 @@
         vrUiCtx.fillText(text, box.x + 20, box.y + 24);
       }
 
-      const vrUiGeo = new THREE.PlaneGeometry(1.25, 1.875);
+      const vrUiGeo = new THREE.PlaneGeometry(1.25, 1.464);
       const vrUiMat = new THREE.MeshBasicMaterial({ map: vrUiTexture, side: THREE.DoubleSide, transparent: true , depthTest: false });
       vrUiMesh = new THREE.Mesh(vrUiGeo, vrUiMat);
       vrUiMesh.position.set(-1.1, 1.35, -0.5);
@@ -485,7 +485,7 @@
         if (uiHit && uiHit.uv) {
           const uv = uiHit.uv;
           const x = uv.x * 512;
-          const y = (1 - uv.y) * 768;
+          const y = (1 - uv.y) * 600;
           for (const key in hitBoxes) {
             const box = hitBoxes[key];
             const inside =
