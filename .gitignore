@@ -2,3 +2,4 @@ node_modules/
 docs/vendor/
 !docs/vendor/.gitkeep
 post-create-command.sh.log
+tmp/
