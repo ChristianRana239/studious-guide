@@ -91,7 +91,7 @@
 
       import * as THREE from '../vendor/three/build/three.module.js';
 
-
+/*
       import {
         // many thanks
         // https://discourse.threejs.org/t/using-three-examples-jsm-addons-js-for-imports-best-practices-and-future-stability/69108
@@ -99,7 +99,15 @@
         VRButton,
         XRControllerModelFactory,
         XRHandModelFactory,
+        // but it'll load also unused js filez see better
       } from '../vendor/three/examples/jsm/Addons.js';
+*/
+
+      // better
+      import { VRButton } from '../vendor/three/examples/jsm/webxr/VRButton.js';
+      import { OrbitControls } from '../vendor/three/examples/jsm/controls/OrbitControls.js';
+      import { XRControllerModelFactory } from '../vendor/three/examples/jsm/webxr/XRControllerModelFactory.js';
+      import { XRHandModelFactory } from '../vendor/three/examples/jsm/webxr/XRHandModelFactory.js';
 
       let container;
       let camera, scene, renderer;
