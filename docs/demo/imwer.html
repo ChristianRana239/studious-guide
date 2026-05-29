@@ -74,7 +74,7 @@
         </li>
       </ul>
     </div>
-    <script>
+    <script type="module">
       /**
        * Copyright (c) Meta Platforms, Inc. and affiliates.
        *
@@ -82,12 +82,17 @@
        * LICENSE file in the root directory of this source tree.
        */
 
-      import * as THREE from 'three';
+      import * as THREE from '../vendor/three/build/three.module.js';
 
-      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-      import { VRButton } from 'three/addons/webxr/VRButton.js';
-      import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
-      import { XRHandModelFactory } from 'three/addons/webxr/XRHandModelFactory.js';
+
+      import {
+        // many thanks
+        // https://discourse.threejs.org/t/using-three-examples-jsm-addons-js-for-imports-best-practices-and-future-stability/69108
+        OrbitControls,
+        VRButton,
+        XRControllerModelFactory,
+        XRHandModelFactory,
+      } from '../vendor/three/examples/jsm/Addons.js';
 
       let container;
       let camera, scene, renderer;
