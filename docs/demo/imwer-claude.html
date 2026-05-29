@@ -1,0 +1,271 @@
+<!-- 
+  Copyright (c) Meta Platforms, Inc. and affiliates.
+
+  This source code is licensed under the MIT license found in the
+  LICENSE file in the root directory of this source tree.
+-->
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>IWER Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      li {
+        background: #f9f9f9;
+        padding: 5px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+      }
+
+      strong {
+        font-weight: bold;
+      }
+
+      .desc {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+      }
+
+      #scene-container {
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="scene-container"></div>
+    <div class="desc">
+      <h1>Immersive Web Emulation Runtime Demo</h1>
+
+      <ul>
+        <li class="emulated">
+          <strong>No Native WebXR Support Detected: </strong>
+          IWER has created an emulated Meta Quest 3 device and injected its
+          WebXR runtime, you can now enter WebXR in emulation mode and control
+          the emulated device via the GUI.
+        </li>
+
+        <li class="emulated">
+          <strong>EMULATION NOT SUPPORTED</strong>
+        </li>
+
+        <li class="native">
+          <strong>Native WebXR Support Detected: </strong>
+          Enter VR and record your input session by pressing trigger on your
+          right controller to start/end recording
+        </li>
+      </ul>
+    </div>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "../vendor/three/build/three.module.js"
+      }
+    }
+    </script>
+    <script type="module">
+      /**
+       * Copyright (c) Meta Platforms, Inc. and affiliates.
+       *
+       * This source code is licensed under the MIT license found in the
+       * LICENSE file in the root directory of this source tree.
+       */
+
+      import * as THREE from '../vendor/three/build/three.module.js';
+
+/*
+      import {
+        // many thanks
+        // https://discourse.threejs.org/t/using-three-examples-jsm-addons-js-for-imports-best-practices-and-future-stability/69108
+        OrbitControls,
+        VRButton,
+        XRControllerModelFactory,
+        XRHandModelFactory,
+        // but it'll load also unused js filez see better
+      } from '../vendor/three/examples/jsm/Addons.js';
+*/
+
+      // better
+      import { VRButton } from '../vendor/three/examples/jsm/webxr/VRButton.js';
+      import { OrbitControls } from '../vendor/three/examples/jsm/controls/OrbitControls.js';
+      import { XRControllerModelFactory } from '../vendor/three/examples/jsm/webxr/XRControllerModelFactory.js';
+      import { XRHandModelFactory } from '../vendor/three/examples/jsm/webxr/XRHandModelFactory.js';
+
+      let container;
+      let camera, scene, renderer;
+      let hand1, hand2;
+      let controller1, controller2;
+      let controllerGrip1, controllerGrip2;
+      let controls;
+      let recorder;
+      let recording = false;
+
+      const prepare = async () => {
+        const nativeVRSupport = navigator.xr
+          ? await navigator.xr.isSessionSupported('immersive-vr')
+          : false;
+        
+        Array.from(document.getElementsByClassName('native')).forEach((el) => {
+          el.style.display = nativeVRSupport ? 'block' : 'none';
+        });
+        Array.from(document.getElementsByClassName('emulated')).forEach((el) => {
+          el.style.display = nativeVRSupport ? 'none' : 'block';
+        });
+      };
+
+      prepare().then(() => {
+        init();
+        animate();
+      });
+
+      function init() {
+        container = document.getElementById('scene-container');
+        document.body.appendChild(container);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x444444);
+
+        camera = new THREE.PerspectiveCamera(
+          50,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          10,
+        );
+        camera.position.set(0, 1.6, 3);
+
+        controls = new OrbitControls(camera, container);
+        controls.target.set(0, 1.6, 0);
+        controls.update();
+
+        const floorGeometry = new THREE.PlaneGeometry(4, 4);
+        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        scene.add(new THREE.HemisphereLight(0xbcbcbc, 0xa5a5a5, 3));
+
+        const light = new THREE.DirectionalLight(0xffffff, 3);
+        light.position.set(0, 6, 0);
+        light.castShadow = true;
+        light.shadow.camera.top = 2;
+        light.shadow.camera.bottom = -2;
+        light.shadow.camera.right = 2;
+        light.shadow.camera.left = -2;
+        light.shadow.mapSize.set(4096, 4096);
+        scene.add(light);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.xr.enabled = true;
+
+        container.appendChild(renderer.domElement);
+
+        const sessionInit = {
+          requiredFeatures: ['hand-tracking'],
+        };
+
+        document.body.appendChild(VRButton.createButton(renderer, sessionInit));
+
+        // controllers
+
+        controller1 = renderer.xr.getController(0);
+        scene.add(controller1);
+
+        controller2 = renderer.xr.getController(1);
+        scene.add(controller2);
+
+        const controllerModelFactory = new XRControllerModelFactory();
+        const handModelFactory = new XRHandModelFactory();
+
+        // Hand 1
+        controllerGrip1 = renderer.xr.getControllerGrip(0);
+        controllerGrip1.add(
+          controllerModelFactory.createControllerModel(controllerGrip1),
+        );
+        scene.add(controllerGrip1);
+
+        hand1 = renderer.xr.getHand(0);
+        hand1.add(handModelFactory.createHandModel(hand1));
+
+        scene.add(hand1);
+
+        // Hand 2
+        controllerGrip2 = renderer.xr.getControllerGrip(1);
+        controllerGrip2.add(
+          controllerModelFactory.createControllerModel(controllerGrip2),
+        );
+        scene.add(controllerGrip2);
+
+        hand2 = renderer.xr.getHand(1);
+        hand2.add(handModelFactory.createHandModel(hand2));
+        scene.add(hand2);
+
+        // cubes
+        const cubeGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+        const cubeMaterial = new THREE.MeshMatcapMaterial({
+          color: 'red',
+        });
+        const cube1 = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube1.position.set(0, 1.5, -0.4);
+        scene.add(cube1);
+
+        const cube2 = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube2.position.set(-0.4, 1.5, -0.4);
+        scene.add(cube2);
+
+        const cube3 = new THREE.Mesh(cubeGeometry, cubeMaterial);
+        cube3.position.set(0.4, 1.5, -0.4);
+        scene.add(cube3);
+
+        window.addEventListener('resize', onWindowResize);
+
+        renderer.xr.addEventListener('sessionstart', () => {
+          const refSpace = renderer.xr.getReferenceSpace();
+          const session = renderer.xr.getSession();
+
+        });
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function animate() {
+        renderer.setAnimationLoop(render);
+      }
+
+      function render() {
+        renderer.render(scene, camera);
+        if (recorder && recording) {
+          recorder.recordFrame(renderer.xr.getFrame());
+        }
+      }
+
+    </script>
+  </body>
+</html>
