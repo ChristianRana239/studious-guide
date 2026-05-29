@@ -68,9 +68,8 @@
         </li>
 
         <li class="native">
-          <strong>Native WebXR Support Detected: </strong>
-          Enter VR and record your input session by pressing trigger on your
-          right controller to start/end recording
+          <strong>Prompt: </strong>
+          without altering structure and the near vanilla html monolith style change the following each red cube in the scene, when pinched or interacted it'll switch hand/controller mode
         </li>
       </ul>
     </div>
@@ -117,6 +116,10 @@
       let controls;
       let recorder;
       let recording = false;
+
+      // 'controller' | 'hand'
+      let inputMode = 'controller';
+      const cubes = [];
 
       const prepare = async () => {
         const nativeVRSupport = navigator.xr
@@ -222,29 +225,91 @@
         hand2.add(handModelFactory.createHandModel(hand2));
         scene.add(hand2);
 
-        // cubes
+        // cubes — each one toggles hand/controller input mode on pinch or trigger
         const cubeGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-        const cubeMaterial = new THREE.MeshMatcapMaterial({
-          color: 'red',
-        });
-        const cube1 = new THREE.Mesh(cubeGeometry, cubeMaterial);
-        cube1.position.set(0, 1.5, -0.4);
-        scene.add(cube1);
 
-        const cube2 = new THREE.Mesh(cubeGeometry, cubeMaterial);
-        cube2.position.set(-0.4, 1.5, -0.4);
-        scene.add(cube2);
+        const makeCubeMaterial = () => new THREE.MeshMatcapMaterial({ color: 'red' });
 
-        const cube3 = new THREE.Mesh(cubeGeometry, cubeMaterial);
-        cube3.position.set(0.4, 1.5, -0.4);
-        scene.add(cube3);
+        const cubePositions = [
+          [0,    1.5, -0.4],
+          [-0.4, 1.5, -0.4],
+          [0.4,  1.5, -0.4],
+        ];
+        for (const [x, y, z] of cubePositions) {
+          const mesh = new THREE.Mesh(cubeGeometry, makeCubeMaterial());
+          mesh.position.set(x, y, z);
+          mesh.userData.interactive = true;
+          scene.add(mesh);
+          cubes.push(mesh);
+        }
 
         window.addEventListener('resize', onWindowResize);
+
+        // ── Input-mode toggle helpers ──────────────────────────────────────
+        const PINCH_RADIUS = 0.12; // metres — how close a pinch/trigger must be to a cube
+
+        function applyInputMode() {
+          const showHands       = inputMode === 'hand';
+          const showControllers = inputMode === 'controller';
+          hand1.visible          = showHands;
+          hand2.visible          = showHands;
+          controllerGrip1.visible = showControllers;
+          controllerGrip2.visible = showControllers;
+          // pulse all cubes to give feedback
+          cubes.forEach((c) => pulseCube(c));
+        }
+
+        function pulseCube(cube) {
+          const original = cube.scale.clone();
+          const t0 = performance.now();
+          function step() {
+            const t = (performance.now() - t0) / 300; // 0→1 over 300 ms
+            if (t >= 1) { cube.scale.copy(original); return; }
+            const s = 1 + 0.4 * Math.sin(t * Math.PI);
+            cube.scale.setScalar(s);
+            requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        }
+
+        function tryToggleFromPosition(worldPos) {
+          for (const cube of cubes) {
+            if (worldPos.distanceTo(cube.position) < PINCH_RADIUS) {
+              inputMode = inputMode === 'controller' ? 'hand' : 'controller';
+              applyInputMode();
+              return true;
+            }
+          }
+          return false;
+        }
+
+        // Controller trigger press → check proximity
+        function onControllerSelect(evt) {
+          const ctrl = evt.target;   // the controller object
+          tryToggleFromPosition(ctrl.position);
+        }
+        controller1.addEventListener('selectstart', onControllerSelect);
+        controller2.addEventListener('selectstart', onControllerSelect);
+
+        // Hand pinch → check index-finger-tip proximity
+        function onHandPinch(evt) {
+          const hand = evt.target;
+          // XRHand joint index 8 = index finger tip
+          const tipJoint = hand.joints?.['index-finger-tip'];
+          if (tipJoint) {
+            tryToggleFromPosition(tipJoint.position);
+          } else {
+            // Fallback: use the hand object's own position
+            tryToggleFromPosition(hand.position);
+          }
+        }
+        hand1.addEventListener('pinchstart', onHandPinch);
+        hand2.addEventListener('pinchstart', onHandPinch);
 
         renderer.xr.addEventListener('sessionstart', () => {
           const refSpace = renderer.xr.getReferenceSpace();
           const session = renderer.xr.getSession();
-
+          applyInputMode(); // enforce initial mode visuals
         });
       }
 
