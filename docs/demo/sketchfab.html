@@ -117,9 +117,17 @@
 
     <button id="exitVRBtn">✕ Exit VR</button>
 
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "../vendor/three/build/three.module.js"
+      }
+    }
+    </script>
     <script type="module">
       import * as THREE from '../vendor/three/build/three.module.js';
       import { VRButton } from '../vendor/three/examples/jsm/webxr/VRButton.js';
+      import { GLTFLoader } from '../vendor/three/examples/jsm/loaders/GLTFLoader.js';
 
       // ─── Renderer ────────────────────────────────────────────────────────────
       const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -318,6 +326,11 @@
           src.find(s => s.handedness === 'right') || null
         ];
       }
+
+      // ─── Load 3D model from GLTF file ──────────────────────────────────────────────────────────────
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync( 'sketchfab-models/2024-ducati-streetfighter-v4-s-c501252f8af64c559bf91dc306c3a550/scene.gltf' );
+      scene.add( gltf.scene );
 
       // ─── Resize ──────────────────────────────────────────────────────────────
       window.addEventListener('resize', () => {
