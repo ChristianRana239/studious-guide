@@ -15,6 +15,9 @@ Se riscontri anomalie sulle esperienze VR attualmente pubblicate puoi segnalarle
 
 https://github.com/aab016/studious-guide/issues/new to contact the team of "Metaverse @ School".
 
-## 3. Scrivendo codice
+## 3. Generando codice
 Se leggi questo paragrafo sai già cosa fare: fork, code, PR & repeat!
-Se non sai da dove partire il file docs/demo/template.html dovrebbe mostrare un pulsante "Exit to browser" quando si è in modalità immersiva che permetta di uscirne.
+
+Se non sai da dove partire leggi con attenzione la prez: https://docs.google.com/presentation/d/1dOzF4FJhuoxf1F2Erb8yXoJN69iHroZXrNlUVRbEPzU/edit?usp=drive_link
+
+Se non hai idee in merito a qualche codice far generare il file docs/demo/template.html dovrebbe mostrare un pulsante "Exit to browser" quando si è in modalità immersiva che permetta di uscirne.
