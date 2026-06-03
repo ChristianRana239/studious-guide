@@ -17,6 +17,9 @@ sudo apt-get install git-lfs >> $LOG_FILE
 echo "post-create-command.sh $(date) - git lfs install" >> $LOG_FILE
 git lfs install >> $LOG_FILE
 
+echo "post-create-command.sh $(date) - git lfs pull" >> $LOG_FILE
+git lfs pull >> $LOG_FILE
+
 echo "post-create-command.sh $(date) - npm install" >> $LOG_FILE
 npm install >> $LOG_FILE
 
