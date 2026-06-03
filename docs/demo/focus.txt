@@ -12,3 +12,7 @@ Uncaught SyntaxError: The requested module '@pmndrs/uikit' does not provide an e
 ==========================================================
 
 You are out of free messages until 7:10 PM
+
+TODO: implement a template with  IWSDK Spatial UI (requires bundler and react...)
+https://developers.meta.com/horizon/documentation/web/iwsdk-guide-spatial-ui/
+https://r3f.docs.pmnd.rs/getting-started/introduction
