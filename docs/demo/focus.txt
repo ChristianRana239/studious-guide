@@ -4,3 +4,11 @@ To create the "eye-test chart / Snellen chart" component uses the UIKitML markup
 Do not add Vite, Webpack or React to the project. Stay on a Three.js/Vanilla architecture.
 
 You can read about "Spatial UI" there: https://developers.meta.com/horizon/documentation/web/iwsdk-guide-spatial-ui/
+
+==========================================================
+
+Uncaught SyntaxError: The requested module '@pmndrs/uikit' does not provide an export named 'Root' (at focus.html:186:9)Understand this error
+
+==========================================================
+
+You are out of free messages until 7:10 PM
