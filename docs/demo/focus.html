@@ -174,16 +174,14 @@
     <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.176.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.176.0/examples/jsm/",
         "@pmndrs/uikit": "https://esm.sh/@pmndrs/uikit@1.0.46?bundle"
       }
     }
     </script>
 
     <script type="module">
-      import * as THREE from 'three';
-      import { VRButton } from 'three/addons/webxr/VRButton.js';
+      import * as THREE from '../vendor/three/build/three.module.js';
+      import { VRButton } from '../vendor/three/examples/jsm/webxr/VRButton.js';
       import {
         Root, Container, Text,
         reversePainterSortStable
