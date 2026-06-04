@@ -246,6 +246,9 @@
         cubes.push(mesh);
       }
 
+      // ── Input-mode toggle helpers ──────────────────────────────────────
+      const PINCH_RADIUS = 0.12; // metres — how close a pinch/trigger must be to a cube
+
       // ─── Controller ray visuals ───────────────────────────────────────────────
       function buildControllerRay(controller) {
         // Ray line
