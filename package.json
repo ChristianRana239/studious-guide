@@ -2,15 +2,15 @@
   "name": "studious-guide",
   "private": true,
   "devDependencies": {
-    "three": "0.161.0",
-    "jquery": "4.0.0"
+    "jquery": "4.0.0",
+    "three": "0.161.0"
   },
   "scripts": {
     "vendor": "bash vendor.sh",
     "build": "npm run vendor",
-    "geckos:server": "node nodejs/geckos.io/server.js"
+    "wss:server": "node nodejs/wss.js"
   },
   "dependencies": {
-    "@geckos.io/server": "3.1.0"
+    "ws": "8.21.0"
   }
 }

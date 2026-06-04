@@ -124,35 +124,67 @@
       }
     }
     </script>
-    <script src="../vendor/geckos.io-client.3.1.0.min.js"></script>
-    <script type="text/javascript"> 
-    function geckosConnect() {
-      const geckosUrl = `${window.location.protocol}//${window.location.hostname.replace('-5500', '-3000')}`;
-      // Explicitly direct Geckos to the port 3000 subdomain and set port to null
-      console.log("geckosUrl: " + geckosUrl)
-      const channel = geckos({ 
-        url: geckosUrl, 
-        port: null 
-      })
+    <script type="text/javascript">
+    window.randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+    console.log(`%crandomColor: ${randomColor}`, `color: ${randomColor};`);
+
+    let socket;
+
+    function wsConnect() {
+      // 1. Calculate the proxy URL for port 3000 in Codespaces
+      const targetHostname = window.location.hostname.replace(/-\d+(?=\.app\.github\.dev)/, '-3000');
       
-      channel.onConnect(error => {
-        if (error) {
-          console.error(error.message)
-          return
+      // Codespaces uses secure https/wss for forwarded URLs
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${wsProtocol}//${targetHostname}`;
+      
+      console.log("WSS Target URL:", wsUrl);
+      
+      // 2. Instantiate native browser WebSocket
+      socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => {
+        console.log("socket.onopen");
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const packet = JSON.parse(event.data);
+          
+          // Handle the custom events we expect from the network
+          if (packet.event === 'onDXControllerSelect') {
+            console.log(`Got text message: ${packet.data}`);
+            window.pulseCubeInvoker(0, packet.data);
+          }
+        } catch (err) {
+          console.error("Error parsing incoming message:", err);
         }
+      };
 
-        channel.on('chat message', data => {
-          console.log(`You got the message ${data}`)
-          window.pulseCubeInvoker(0)
-        })
-      })
+      socket.onerror = (error) => {
+        console.error("WebSocket Error:", error);
+      };
 
-      window.emitInvoker = function(msg) {
-        debugger
-        channel.emit(msg);
-      }
+      socket.onclose = () => {
+        console.log("%c[WS Closed] Connection lost. Reconnecting in 3s...", "color: #ff8888;");
+        setTimeout(wsConnect, 3000); // Simple auto-reconnect loop
+      };
+
+      // 3. Define the invoker helper for the Three.js module to call
+      window.emitInvoker = function(eventName, payloadData = '') {
+        console.log("emitInvoker", eventName, payloadData)
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          // Packets must be strings over basic WebSockets
+          const packet = JSON.stringify({ event: eventName, data: payloadData });
+          socket.send(packet);
+        } else {
+          console.warn("Cannot send message, WebSocket is not open.");
+        }
+      };
     }
-    geckosConnect()
+
+    // Fire connection immediately
+    wsConnect();
     </script>
     <script type="module">
       import * as THREE from '../vendor/three/build/three.module.js';
@@ -199,11 +231,11 @@
       scene.add(controller0);
       scene.add(controller1);
 
-      function onControllerSelect(evt) {
+      function onDXControllerSelect(evt) {
         const ctrl = evt.target;   // the controller object
-        window.emitInvoker('onControllerSelect')
+        window.emitInvoker('onDXControllerSelect', window.randomColor)
       }
-      controller0.addEventListener('selectstart', onControllerSelect);
+      controller0.addEventListener('selectstart', onDXControllerSelect);
 
       // ─── Lights ──────────────────────────────────────────────────────────────
       scene.add(new THREE.HemisphereLight(0xffffff, 0x101825, 0.8));
@@ -268,7 +300,7 @@
       const LATO_DEI_CUBI = 0.5;
       const cubeGeometry = new THREE.BoxGeometry(LATO_DEI_CUBI, LATO_DEI_CUBI, LATO_DEI_CUBI);
 
-      const makeCubeMaterial = () => new THREE.MeshMatcapMaterial({ color: 'red' });
+      const makeCubeMaterial = () => new THREE.MeshMatcapMaterial({ color: window.randomColor });
 
       const cubePositions = [
         [0,    1.5, -0.4],
@@ -284,7 +316,8 @@
       // ── Input-mode toggle helpers ──────────────────────────────────────
       const PINCH_RADIUS = 0.12; // metres — how close a pinch/trigger must be to a cube
 
-      window.pulseCubeInvoker = function(i) {
+      window.pulseCubeInvoker = function(i, color) {
+        cubes[i].material.color.set(color);
         pulseCube(cubes[i]);
       }
 
