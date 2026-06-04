@@ -226,6 +226,26 @@
       const _tempMat    = new THREE.Matrix4();
       const _lightColor = new THREE.Color();
 
+
+      const cubes = [];
+      // cubes — each one toggles hand/controller input mode on pinch or trigger
+      const cubeGeometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+
+      const makeCubeMaterial = () => new THREE.MeshMatcapMaterial({ color: 'red' });
+
+      const cubePositions = [
+        [0,    1.5, -0.4],
+        [-0.4, 1.5, -0.4],
+        [0.4,  1.5, -0.4],
+      ];
+      for (const [x, y, z] of cubePositions) {
+        const mesh = new THREE.Mesh(cubeGeometry, makeCubeMaterial());
+        mesh.position.set(x, y, z);
+        mesh.userData.interactive = true;
+        scene.add(mesh);
+        cubes.push(mesh);
+      }
+
       // ─── Controller ray visuals ───────────────────────────────────────────────
       function buildControllerRay(controller) {
         // Ray line
