@@ -143,11 +143,16 @@
 
         channel.on('chat message', data => {
           console.log(`You got the message ${data}`)
+          window.pulseCubeInvoker(0)
         })
-
-        channel.emit('chat message', 'a short message sent to the server')
       })
+
+      window.emitInvoker = function(msg) {
+        debugger
+        channel.emit(msg);
+      }
     }
+    geckosConnect()
     </script>
     <script type="module">
       import * as THREE from '../vendor/three/build/three.module.js';
@@ -196,7 +201,7 @@
 
       function onControllerSelect(evt) {
         const ctrl = evt.target;   // the controller object
-        window.pulseCubeInvoker(0);
+        window.emitInvoker('onControllerSelect')
       }
       controller0.addEventListener('selectstart', onControllerSelect);
 
