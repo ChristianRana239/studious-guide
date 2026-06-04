@@ -127,7 +127,14 @@
     <script src="../vendor/geckos.io-client.3.1.0.min.js"></script>
     <script type="text/javascript"> 
     function geckosConnect() {
-      const channel = geckos({ port: 3000 }) // default port is 9208
+      const geckosUrl = `${window.location.protocol}//${window.location.hostname.replace('-5500', '-3000')}`;
+      // Explicitly direct Geckos to the port 3000 subdomain and set port to null
+      console.log("geckosUrl: " + geckosUrl)
+      const channel = geckos({ 
+        url: geckosUrl, 
+        port: null 
+      })
+      
       channel.onConnect(error => {
         if (error) {
           console.error(error.message)
