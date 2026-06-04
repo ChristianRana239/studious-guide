@@ -248,6 +248,23 @@
       // ── Input-mode toggle helpers ──────────────────────────────────────
       const PINCH_RADIUS = 0.12; // metres — how close a pinch/trigger must be to a cube
 
+      window.pulseCubeInvoker = function(i) {
+        pulseCube(cubes[i]);
+      }
+
+      function pulseCube(cube) {
+        const original = cube.scale.clone();
+        const t0 = performance.now();
+        function step() {
+          const t = (performance.now() - t0) / 300; // 0→1 over 300 ms
+          if (t >= 1) { cube.scale.copy(original); return; }
+          const s = 1 + 0.4 * Math.sin(t * Math.PI);
+          cube.scale.setScalar(s);
+          requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+
       // ─── Controller ray visuals ───────────────────────────────────────────────
       function buildControllerRay(controller) {
         // Ray line
