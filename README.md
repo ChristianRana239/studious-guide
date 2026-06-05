@@ -62,3 +62,9 @@ Virtual Hospitality: https://education.carraro-lab.com/catalogo-dei-laboratori-d
 Catalogo Istituti Tecnici: https://education.carraro-lab.com/catalogo-dei-laboratori-didattici-istituti-tecnici/
 
 XR Edu Lab: https://www.xredulab.com
+
+## WSS on Render.com
+
+On docs/demo/classroom.html we use Render HTTPS/WSS when public on aab016.github.io
+
+https://dashboard.render.com/web/srv-d8hi2mk8aovs73f83sa0/events
