@@ -4,8 +4,7 @@
 		"vscode": {
 			"extensions": [
 				"ritwickdey.LiveServer",
-				"github.vscode-github-actions",
-				"Google.geminicodeassist"
+				"github.vscode-github-actions"
 			]
 		}
 	},
