@@ -53,11 +53,27 @@ const server = createServer(async (req, res) => {
       // 4. Execute POST to sso_authorize_code
       const graphAccessToken = process.env.OCULUS_GRAPH_ACCESS_TOKEN || '';
       console.log("graphAccessToken", graphAccessToken)
+
       //const postUrl = `https://0907c260e86e801cd212gwe347ayyyyyb.oast.me/sso_authorize_code?code=${code}&access_token=${graphAccessToken}&org_scoped_id=${org_scoped_id}`;
-      const postUrl = `https://graph.oculus.com/sso_authorize_code?code=${code}&access_token=${graphAccessToken}&org_scoped_id=${org_scoped_id}`;
+
+      const postUrl = `https://graph.oculus.com/sso_authorize_code`;
       console.log("postUrl", postUrl)
       
-      const postResponse = await fetch(postUrl, { method: 'POST' });
+      // Prepare the parameters for the request body
+      const postBody = new URLSearchParams({
+        code: code,
+        access_token: graphAccessToken,
+        org_scoped_id: org_scoped_id
+      });
+      
+      const postResponse = await fetch(postUrl, { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: postBody
+      });
+      
       const postData = await postResponse.json();
       console.log("postData", postData)
       
