@@ -3,25 +3,81 @@ import { WebSocketServer } from 'ws';
 
 const PORT = process.env.PORT || 3000;
 
-// 1. Create a standard HTTP server to handle the /healthz route
-const server = createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/healthz') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'OK', service: 'websocket-server' }));
-  } else {
-    // Return 404 for any other HTTP requests that aren't WebSocket upgrades
+// 1. Create a standard HTTP server to handle the /healthz and /oculus/me routes
+const server = createServer(async (req, res) => {
+  try {
+    // Parse the URL to handle paths and query parameters easily
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+    // --- Healthcheck Route ---
+    if (req.method === 'GET' && parsedUrl.pathname === '/healthz') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ status: 'OK', service: 'websocket-server' }));
+    } 
+    
+    // --- Oculus SSO Route ---
+    if (req.method === 'GET' && parsedUrl.pathname === '/oculus/me') {
+      const oculusFragment = parsedUrl.searchParams.get('oculus_fragment');
+      
+      if (!oculusFragment) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'Missing oculus_fragment parameter' }));
+      }
+
+      // 1. Base64 decode the "oculus_fragment" into a string
+      const decodedStr = Buffer.from(oculusFragment, 'base64').toString('utf-8');
+      
+      // 2. Parse the string as a json & 3. Extract "code" and "org_scoped_id"
+      const { code, org_scoped_id } = JSON.parse(decodedStr);
+
+      if (!code || !org_scoped_id) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'Missing code or org_scoped_id in oculus_fragment' }));
+      }
+
+      // 4. Execute POST to sso_authorize_code
+      const graphAccessToken = process.env.OCULUS_GRAPH_ACCESS_TOKEN || '';
+      const postUrl = `https://graph.oculus.com/sso_authorize_code?code=${encodeURIComponent(code)}&access_token=${encodeURIComponent(graphAccessToken)}&org_scoped_id=${encodeURIComponent(org_scoped_id)}`;
+      
+      const postResponse = await fetch(postUrl, { method: 'POST' });
+      const postData = await postResponse.json();
+      
+      // Extract the resulting access token (oauth_token)
+      const oauthToken = postData.oauth_token; 
+      if (!oauthToken) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'Failed to obtain oauth_token from Oculus', details: postData }));
+      }
+
+      // 5. Execute GET to /me
+      const getUrl = `https://graph.oculus.com/me?access_token=${encodeURIComponent(oauthToken)}&fields=id,alias`;
+      const getResponse = await fetch(getUrl);
+      const getData = await getResponse.json();
+
+      // Return the /me response to the client
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(getData));
+    }
+
+    // Return 404 for any other HTTP requests that aren't routed or WebSocket upgrades
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
+
+  } catch (err) {
+    console.error('HTTP Request Error:', err);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Internal Server Error', message: err.message }));
   }
 });
 
 // 2. Attach the WebSocket server to share the exact same server instance
 const wss = new WebSocketServer({ server });
 
-// 3. Start listening on port 3000 and bind to 0.0.0.0
+// 3. Start listening dynamically
 server.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 Server listening on port ' + PORT);
   console.log('   ↳ Healthcheck available at: http://0.0.0.0:' + PORT + '/healthz');
+  console.log('   ↳ Oculus Auth available at: http://0.0.0.0:' + PORT + '/oculus/me');
   console.log('   ↳ WebSocket available at:   ws://0.0.0.0:' + PORT + '');
 });
 
