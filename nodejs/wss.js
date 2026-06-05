@@ -1,9 +1,29 @@
+import { createServer } from 'http'; // Native Node.js HTTP module
 import { WebSocketServer } from 'ws';
 
-// Listen on port 3000 and bind to 0.0.0.0 for external availability
-const wss = new WebSocketServer({ port: 3000, host: '0.0.0.0' });
+// 1. Create a standard HTTP server to handle the /healthz route
+const server = createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/healthz') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'OK', service: 'websocket-server' }));
+  } else {
+    // Return 404 for any other HTTP requests that aren't WebSocket upgrades
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
+  }
+});
 
-console.log('🚀 WebSocket server running on ws://0.0.0.0:3000');
+// 2. Attach the WebSocket server to share the exact same server instance
+const wss = new WebSocketServer({ server });
+
+// 3. Start listening on port 3000 and bind to 0.0.0.0
+server.listen(3000, '0.0.0.0', () => {
+  console.log('🚀 Server listening on port 3000');
+  console.log('   ↳ Healthcheck available at: http://0.0.0.0:3000/healthz');
+  console.log('   ↳ WebSocket available at:   ws://0.0.0.0:3000');
+});
+
+// --- Your existing WebSocket Logic (Unchanged) ---
 
 wss.on('connection', (ws) => {
   // Generate a random hex color for this browser tab session
@@ -11,16 +31,16 @@ wss.on('connection', (ws) => {
 
   if (wss.clients.size === 0) {
     console.warn("Warning: wss.clients is empty during CONNECTION");
-} else {
+  } else {
     console.warn("CONNECTION wss.clients.size: " + wss.clients.size);
-}
+  }
 
   ws.on('message', (message) => {
-      if (wss.clients.size === 0) {
-    console.warn("Warning: wss.clients is empty during MESSAGE");
-} else {
-    console.warn("MESSAGE wss.clients.size: " + wss.clients.size);
-}
+    if (wss.clients.size === 0) {
+      console.warn("Warning: wss.clients is empty during MESSAGE");
+    } else {
+      console.warn("MESSAGE wss.clients.size: " + wss.clients.size);
+    }
     try {
       // Parse the incoming string into a JSON object
       const packet = JSON.parse(message);
@@ -30,7 +50,7 @@ wss.on('connection', (ws) => {
       const broadcastData = JSON.stringify({ event: packet.event, data: packet.data });
 
       wss.clients.forEach((client) => {
-        console.log("trying to broadcast data to client in state: ", client.readyState)
+        console.log("trying to broadcast data to client in state: ", client.readyState);
         if (client.readyState === 1) { // 1 means OPEN
           client.send(broadcastData);
           console.log("broadcasted");
