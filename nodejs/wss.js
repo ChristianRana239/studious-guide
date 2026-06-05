@@ -37,8 +37,11 @@ const server = createServer(async (req, res) => {
         return res.end(JSON.stringify({ error: 'Missing oculus_fragment parameter' }));
       }
 
+      console.log("oculusFragment", oculusFragment)
+
       // 1. Base64 decode the "oculus_fragment" into a string
       const decodedStr = Buffer.from(oculusFragment, 'base64').toString('utf-8');
+      console.log("decodedStr", decodedStr)
       
       // 2. Parse the string as a json & 3. Extract "code" and "org_scoped_id"
       const { code, org_scoped_id } = JSON.parse(decodedStr);
@@ -65,6 +68,7 @@ const server = createServer(async (req, res) => {
         access_token: graphAccessToken,
         org_scoped_id: org_scoped_id
       });
+      console.log("postBody", postBody)
       
       const postResponse = await fetch(postUrl, { 
         method: 'POST',
