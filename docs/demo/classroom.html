@@ -229,8 +229,8 @@
       scene.add(camera);
 
       // ─── HUD Setup (Attached to Camera) ──────────────────────────────────────
-      const storedId = localStorage.getItem('oculus_id');
-      const storedAlias = localStorage.getItem('oculus_alias');
+      const oculus_id = localStorage.getItem('oculus_id');
+      const oculus_alias = localStorage.getItem('oculus_alias');
 
       // Create a 2D canvas to draw the text
       const hudCanvas = document.createElement('canvas');
@@ -249,14 +249,14 @@
       ctx.textBaseline = 'middle';
 
       // Draw text based on login state
-      if (storedId && storedAlias) {
+      if (oculus_id && oculus_alias) {
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 36px system-ui, sans-serif';
-        ctx.fillText(storedAlias, 480, 48);
+        ctx.fillText(oculus_alias, 480, 48);
         
         ctx.fillStyle = '#88c8ff';
         ctx.font = '24px monospace';
-        ctx.fillText(`${storedId}`, 480, 92);
+        ctx.fillText(`${oculus_id}`, 480, 92);
       } else {
         ctx.fillStyle = '#ffaaaa';
         ctx.font = '28px system-ui, sans-serif';
@@ -528,8 +528,8 @@
 
               // ── NEW: Broadcast the movement payload over WSS ──
               window.emitInvoker('camera_move', {
-                alias: storedAlias || 'guest',
-                id: storedId || 'unknown_id',
+                oculus_alias: oculus_alias || 'guest',
+                oculus_id: oculus_id || 'unknown_id',
                 coordinates: {
                   x: camera.position.x,
                   y: camera.position.y,
