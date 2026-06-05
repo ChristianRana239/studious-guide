@@ -28,7 +28,7 @@ SALVARE() {
         find . -type f -name "*.html" -exec git add {} +
         
         # 4. Committa usando esattamente la stringa digitata dall'utente
-        git commit -m "struggling(typing): <${USER_INPUT}>"
+        git commit -m "struggling(typing): ${USER_INPUT}"
         
         # 5. Fetch da upstream
         gum style --foreground 226 "Eseguo fetch da upstream..."
