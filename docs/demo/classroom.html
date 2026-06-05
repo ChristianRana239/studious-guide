@@ -155,10 +155,9 @@
       socket.onmessage = (event) => {
         try {
           const packet = JSON.parse(event.data);
-          
+          console.log("Got message", packet);
           // Handle the custom events we expect from the network
           if (packet.event === 'onDXControllerSelect') {
-            console.log(`Got text message: ${packet.data}`);
             window.pulseCubeInvoker(0, packet.data);
           }
         } catch (err) {
@@ -525,6 +524,21 @@
               renderer.xr.setReferenceSpace(
                 renderer.xr.getReferenceSpace().getOffsetReferenceSpace(xform)
               );
+
+
+              // ── NEW: Broadcast the movement payload over WSS ──
+              window.emitInvoker('camera_move', {
+                alias: storedAlias || 'guest',
+                id: storedId || 'unknown_id',
+                coordinates: {
+                  x: camera.position.x,
+                  y: camera.position.y,
+                  z: camera.position.z
+                },
+                timestamp: Date.now() // Standard UNIX timestamp in milliseconds
+              });
+
+
               // Reset deltas — the new reference space is now the baseline
               xrOffsetX = 0; xrOffsetY = 0; xrOffsetZ = 0; xrYaw = 0;
             } catch(e) { /* XRRigidTransform not yet available, skip */ }
