@@ -1,4 +1,11 @@
+# SAVE
+
+![SAVE](docs/assets/SAVE.png)
+
 ## Introduzione
+
+![Metaverso a scuola](docs/assets/metaverso-a-scuola.black.square.192x192.png)
+
 Questo repository contiene applicazioni WebXR basate su three.js compatibili con il VR headset Meta Quest.
 
 Il progetto è portato avanti dall'IIS G.L. Lagrange per sopperrire alla mancanza di contenuti educativi per visori.
