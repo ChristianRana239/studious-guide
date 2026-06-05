@@ -383,7 +383,7 @@
         }
       };
 
-      
+
 
       // ─── Controllers ─────────────────────────────────────────────────────────
       // Controllers live in the scene; the XR runtime positions them correctly
@@ -546,6 +546,8 @@
       // Running world-space offset (meters) and heading (radians)
       let xrOffsetX = 0, xrOffsetY = 0, xrOffsetZ = 0, xrYaw = 0;
 
+      let pendingLocomotionEmit = false; // ── NEW: Track if we need to emit ──
+
       function applyDeadzone(v) {
         return Math.abs(v) < DEADZONE ? 0 : v;
       }
@@ -571,6 +573,22 @@
       const clock = new THREE.Clock();
 
       renderer.setAnimationLoop(() => {
+        // ── NEW: Emit coordinates exactly one frame after the movement ──
+        if (pendingLocomotionEmit) {
+          window.emitInvoker('camera_move', {
+            alias: oculus_alias || 'guest',
+            id: oculus_id || 'unknown_id',
+            coordinates: {
+              x: camera.position.x,
+              y: camera.position.y,
+              z: camera.position.z
+            },
+            timestamp: Date.now()
+          });
+          pendingLocomotionEmit = false;
+        }
+
+
         const dt = clock.getDelta();
         const t  = clock.elapsedTime;
 
@@ -627,19 +645,8 @@
                 renderer.xr.getReferenceSpace().getOffsetReferenceSpace(xform)
               );
 
-
-              // ── NEW: Broadcast the movement payload over WSS ──
-              window.emitInvoker('camera_move', {
-                oculus_alias: oculus_alias || 'guest',
-                oculus_id: oculus_id || 'unknown_id',
-                coordinates: {
-                  x: camera.position.x,
-                  y: camera.position.y,
-                  z: camera.position.z
-                },
-                timestamp: Date.now() // Standard UNIX timestamp in milliseconds
-              });
-
+              // ── NEW: Tell the next frame to broadcast the updated position ──
+              pendingLocomotionEmit = true;
 
               // Reset deltas — the new reference space is now the baseline
               xrOffsetX = 0; xrOffsetY = 0; xrOffsetZ = 0; xrYaw = 0;
