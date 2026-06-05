@@ -131,16 +131,21 @@
     let socket;
 
     function wsConnect() {
-      // 1. Calculate the proxy URL for port 3000 in Codespaces
-      const targetHostname = window.location.hostname.replace('-5500', '-3000');
-      
-      // Codespaces uses secure https/wss for forwarded URLs
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${wsProtocol}//${targetHostname}`;
+      let wsUrl;
+
+      // Dynamic routing evaluation
+      if (window.location.hostname === 'aab016.github.io') {
+        wsUrl = 'wss://studious-guide-bjbn.onrender.com/';
+      } else {
+        // Calculate the proxy URL for port 3000 in local Codespaces
+        const targetHostname = window.location.hostname.replace('-5500', '-3000');
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        wsUrl = `${wsProtocol}//${targetHostname}`;
+      }
       
       console.log("WSS Target URL:", wsUrl);
       
-      // 2. Instantiate native browser WebSocket
+      // Instantiate native browser WebSocket
       socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
@@ -189,7 +194,6 @@
     <script type="module">
       import * as THREE from '../vendor/three/build/three.module.js';
       import { VRButton } from '../vendor/three/examples/jsm/webxr/VRButton.js';
-      import { GLTFLoader } from '../vendor/three/examples/jsm/loaders/GLTFLoader.js';
 
       // ─── Renderer ────────────────────────────────────────────────────────────
       const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -294,44 +298,8 @@
       const _tempMat    = new THREE.Matrix4();
       const _lightColor = new THREE.Color();
 
-
-      const cubes = [];
-      // cubes — each one toggles hand/controller input mode on pinch or trigger
-      const LATO_DEI_CUBI = 0.5;
-      const cubeGeometry = new THREE.BoxGeometry(LATO_DEI_CUBI, LATO_DEI_CUBI, LATO_DEI_CUBI);
-
-      const makeCubeMaterial = () => new THREE.MeshMatcapMaterial({ color: window.randomColor });
-
-      const cubePositions = [
-        [0,    1.5, -0.4],
-      ];
-      for (const [x, y, z] of cubePositions) {
-        const mesh = new THREE.Mesh(cubeGeometry, makeCubeMaterial());
-        mesh.position.set(x, y, z);
-        mesh.userData.interactive = true;
-        scene.add(mesh);
-        cubes.push(mesh);
-      }
-
-      // ── Input-mode toggle helpers ──────────────────────────────────────
-      const PINCH_RADIUS = 0.12; // metres — how close a pinch/trigger must be to a cube
-
       window.pulseCubeInvoker = function(i, color) {
-        cubes[i].material.color.set(color);
-        pulseCube(cubes[i]);
-      }
-
-      function pulseCube(cube) {
-        const original = cube.scale.clone();
-        const t0 = performance.now();
-        function step() {
-          const t = (performance.now() - t0) / 300; // 0→1 over 300 ms
-          if (t >= 1) { cube.scale.copy(original); return; }
-          const s = 1 + 0.4 * Math.sin(t * Math.PI);
-          cube.scale.setScalar(s);
-          requestAnimationFrame(step);
-        }
-        requestAnimationFrame(step);
+        console.warn("pulseCubeInvoker NOT IMPLEMENTED")
       }
 
       // ─── Controller ray visuals ───────────────────────────────────────────────
@@ -434,11 +402,6 @@
           src.find(s => s.handedness === 'right') || null
         ];
       }
-
-      // ─── Load 3D model from GLTF file ──────────────────────────────────────────────────────────────
-      const loader = new GLTFLoader();
-      const gltf = await loader.loadAsync( 'sketchfab-models/2024-ducati-streetfighter-v4-s-c501252f8af64c559bf91dc306c3a550/scene.gltf' );
-      scene.add( gltf.scene );
 
       // ─── Resize ──────────────────────────────────────────────────────────────
       window.addEventListener('resize', () => {
