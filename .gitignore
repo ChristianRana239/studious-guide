@@ -3,3 +3,4 @@ docs/vendor/
 !docs/vendor/.gitkeep
 post-create-command.sh.log
 tmp/
+.GH_REPO_SET-DEFAULT

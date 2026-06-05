@@ -14,7 +14,7 @@ SALVARE() {
     
     # Raccoglie l'input dell'utente
     local USER_INPUT
-    USER_INPUT=$(gum input --placeholder "yes/ye/yse...")
+    USER_INPUT=$(gum input --placeholder "✨...")
 
     # Converte l'input in minuscolo per facilitare il controllo (Bash 4+)
     local input_lower="${USER_INPUT,,}"
@@ -55,11 +55,39 @@ SALVARE() {
         # 7. Push forzato (aggiornerà la PR automaticamente se già esiste)
         gum style --foreground 226 "Eseguo push forzato..."
         git push -f
+
+        # --- MODIFICATO: CONTROLLO TRAMITE FILE LOCALE ---
+        if [ ! -f .GH_REPO_SET-DEFAULT ]; then
+            gum style --foreground 212 "File .GH_REPO_SET-DEFAULT non trovato. Configuro il repository..."
+            
+            # Estrae l'URL da .git/config (priorità a upstream, poi origin)
+            local REMOTE_URL
+            REMOTE_URL=$(git remote get-url upstream 2>/dev/null || git remote get-url origin 2>/dev/null)
+            
+            local REPO_IDENTIFIER=""
+            if [ -n "$REMOTE_URL" ]; then
+                # Pulisce l'URL trasformando sia HTTPS che SSH nel formato "owner/repo"
+                REPO_IDENTIFIER=$(echo "$REMOTE_URL" | sed -E 's/.*github.com[:\/]//; s/\.git$//')
+            elif [ -n "$GITHUB_REPOSITORY" ]; then
+                # Fallback sulla variabile d'ambiente di Codespaces
+                REPO_IDENTIFIER="$GITHUB_REPOSITORY"
+            fi
+            
+            # Se ha trovato un identificatore valido, imposta il default e crea il file
+            if [ -n "$REPO_IDENTIFIER" ]; then
+                if gh repo set-default "$REPO_IDENTIFIER"; then
+                    touch .GH_REPO_SET-DEFAULT
+                    gum style --foreground 46 "Repository impostato su: $REPO_IDENTIFIER e creato file di sblocco."
+                fi
+            fi
+        fi
+        # --------------------------------------------------------
         
         # 8. Apre/Aggiorna la PR verso upstream tramite GitHub CLI
         # Se la PR esiste già, il `push -f` l'ha già aggiornata. Ignoriamo l'errore di `gh pr create`.
         gum style --foreground 226 "Gestione Pull Request..."
-        gh pr create --fill --base main 2>/dev/null
+        set -e
+        gh pr create --fill --base main
         
         gum style --foreground 46 --bold "✅ Tutto completato con successo!"
     else
