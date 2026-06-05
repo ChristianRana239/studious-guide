@@ -22,6 +22,12 @@ SALVARE() {
     # 2. Controllo dell'input (inizia con 'y' seguito eventualmente da 'e' o 's')
     # Matcherà "yes", "ye", "yse", "ys", "y", ecc.
     if [[ "$input_lower" =~ ^y[es]*$ ]]; then
+
+        if [ -z "$(find . -type f -name '*.html' -print -quit)" ]; then
+            gum style --foreground 214 --bold "Non risultano file .html da SALVARE"
+            return 0
+        fi
+
         gum style --foreground 46 "Procedo con git..."
         
         gum style --foreground 226 "Stage dei file .html..."
