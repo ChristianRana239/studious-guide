@@ -160,6 +160,13 @@
           if (packet.event === 'onDXControllerSelect') {
             window.pulseCubeInvoker(0, packet.data);
           }
+
+          // NEW: Handle incoming remote camera movements
+          if (packet.event === 'camera_move') {
+            if (window.handleRemoteCameraMove) {
+              window.handleRemoteCameraMove(packet.data);
+            }
+          }
         } catch (err) {
           console.error("Error parsing incoming message:", err);
         }
@@ -282,6 +289,101 @@
       hudPlane.position.set(0.3, 0.22, -0.7); 
       hudPlane.renderOrder = 999; // Force top rendering priority
       camera.add(hudPlane); // Attach to camera so it moves with the user's head
+
+
+
+      // ─── Multiplayer Remote Players ──────────────────────────────────────────
+      // Store remote player meshes and timestamps
+      const remotePlayers = {};
+
+      window.handleRemoteCameraMove = function(payload) {
+        const { oculus_alias, oculus_id: remote_id, coordinates, timestamp } = payload;
+
+        // 1. Ignore our own movement broadcasts
+        if (remote_id === oculus_id) return;
+
+        // 2. Check if we already have a panel for this user
+        if (!remotePlayers[remote_id]) {
+          // --- First time seeing this user: Create the light panel ---
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 128;
+          const context = canvas.getContext('2d');
+
+          // Draw panel background (similar to HUD style)
+          context.fillStyle = 'rgba(2, 8, 25, 0.85)';
+          context.beginPath();
+          context.roundRect(0, 0, 512, 128, 16);
+          context.fill();
+          
+          // Border
+          context.strokeStyle = 'rgba(136, 200, 255, 0.4)';
+          context.lineWidth = 4;
+          context.stroke();
+
+          // Text setup
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          
+          // Alias
+          context.fillStyle = '#ffffff';
+          context.font = 'bold 36px system-ui, sans-serif';
+          context.fillText(oculus_alias || 'Guest', 256, 48);
+          
+          // ID
+          context.fillStyle = '#88c8ff';
+          context.font = '24px monospace';
+          context.fillText(remote_id, 256, 92);
+
+          // Create Texture and Material
+          const texture = new THREE.CanvasTexture(canvas);
+          texture.minFilter = THREE.LinearFilter;
+          
+          // Sprites are ideal because they always face the local camera
+          const material = new THREE.SpriteMaterial({ 
+            map: texture, 
+            transparent: true,
+            depthTest: false // Ensures we can see players through walls/objects if desired
+          });
+          
+          const sprite = new THREE.Sprite(material);
+          // Scale it to respect the 512x128 aspect ratio (4:1)
+          sprite.scale.set(1.6, 0.4, 1); 
+          
+          // Position it exactly at the coordinates of the message
+          sprite.position.set(coordinates.x, coordinates.y, coordinates.z);
+          
+          scene.add(sprite);
+
+          // Store reference and initial timestamp
+          remotePlayers[remote_id] = {
+            mesh: sprite,
+            timestamp: timestamp
+          };
+
+          console.log(`[Multiplayer] Created panel for ${remote_id}`);
+
+        } else {
+          // --- Existing user: Update position if timestamp is newer ---
+          
+          const playerState = remotePlayers[remote_id];
+          
+          if (timestamp > playerState.timestamp) {
+            // Update timestamp
+            playerState.timestamp = timestamp;
+            
+            // Update position
+            playerState.mesh.position.set(
+              coordinates.x, 
+              coordinates.y, 
+              coordinates.z
+            );
+          }
+        }
+      };
+
+      
 
       // ─── Controllers ─────────────────────────────────────────────────────────
       // Controllers live in the scene; the XR runtime positions them correctly
