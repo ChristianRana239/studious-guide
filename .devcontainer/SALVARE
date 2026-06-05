@@ -59,7 +59,7 @@ SALVARE() {
         # 8. Apre/Aggiorna la PR verso upstream tramite GitHub CLI
         # Se la PR esiste già, il `push -f` l'ha già aggiornata. Ignoriamo l'errore di `gh pr create`.
         gum style --foreground 226 "Gestione Pull Request..."
-        gh pr create --fill --base main 2>/dev/null || echo "La PR esiste già ed è stata aggiornata con successo."
+        gh pr create --fill --base main 2>/dev/null
         
         gum style --foreground 46 --bold "✅ Tutto completato con successo!"
     else
