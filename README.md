@@ -1,6 +1,6 @@
-# SAVE
+# SALVARE
 
-![SAVE](docs/assets/SAVE.png)
+![SALVARE](docs/assets/SALVARE.png)
 
 ## Introduzione
 
