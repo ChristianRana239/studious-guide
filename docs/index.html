@@ -108,14 +108,43 @@
     <div class="foot">
       <p>Vuoi aiutare a creare esperienze per insegnanti e studenti?<br /><a class="cta" href="demo/" target="_blank" rel="noopener noreferrer">Contribuisci</a></p>
       <p style="margin-top:12px;"><a id="open-in-meta-quest" class="cta" href="#" target="_blank" rel="noopener noreferrer">Apri in Meta Quest</a></p>
+      
       <script>
         $(function() {
+          // Meta Quest open link logic
           $("#open-in-meta-quest").hide();
           window_location_href = window.location.href;
           $("#open-in-meta-quest").attr("href","https://www.oculus.com/open_url/?url=" + encodeURIComponent(window_location_href));
           $("#open-in-meta-quest").show();
+
+          // Oculus SSO Fragment check logic
+          const hash = window.location.hash;
+          if (hash && hash.length > 1) {
+            const fragmentValue = hash.substring(1); // Remove the '#'
+            let getUrl;
+
+            // Route based on environment
+            if (window.location.hostname === 'aab016.github.io') {
+              getUrl = 'https://studious-guide-bjbn.onrender.com/oculus/me';
+            } else {
+              // Codespaces routing: replace port 5500 with 3000
+              const targetHostname = window.location.hostname.replace('-5500', '-3000');
+              const protocol = window.location.protocol;
+              getUrl = `${protocol}//${targetHostname}/oculus/me`;
+            }
+
+            // Execute GET request with fragment parameter
+            $.get(getUrl, { oculus_fragment: fragmentValue })
+              .done(function(response) {
+                console.log("Oculus Profile fetched successfully:", response);
+              })
+              .fail(function(error) {
+                console.error("Failed to fetch Oculus Profile:", error);
+              });
+          }
         });
       </script>
+      
       <p style="margin-top:12px;"><a id="cast-in-browser" class="cta" href="https://horizon.meta.com/casting" target="_blank" rel="noopener noreferrer">Cast headset livestream</a></p>
     </div>
   </div>
