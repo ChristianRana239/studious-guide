@@ -229,6 +229,62 @@
       camera.position.set(0, 1.6, 4);
       scene.add(camera);
 
+      // ─── HUD Setup (Attached to Camera) ──────────────────────────────────────
+      const storedId = localStorage.getItem('oculus_id');
+      const storedAlias = localStorage.getItem('oculus_alias');
+
+      // Create a 2D canvas to draw the text
+      const hudCanvas = document.createElement('canvas');
+      hudCanvas.width = 512;
+      hudCanvas.height = 128;
+      const ctx = hudCanvas.getContext('2d');
+
+      // Draw semi-transparent background box
+      ctx.fillStyle = 'rgba(5, 10, 24, 0.5)'; // Dark, 50% opacity
+      ctx.beginPath();
+      ctx.roundRect(0, 0, 512, 128, 16);
+      ctx.fill();
+
+      // Configure text properties
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+
+      // Draw text based on login state
+      if (storedId && storedAlias) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px system-ui, sans-serif';
+        ctx.fillText(storedAlias, 480, 48);
+        
+        ctx.fillStyle = '#88c8ff';
+        ctx.font = '24px monospace';
+        ctx.fillText(`${storedId}`, 480, 92);
+      } else {
+        ctx.fillStyle = '#ffaaaa';
+        ctx.font = '28px system-ui, sans-serif';
+        ctx.fillText("Vai in home page per login", 480, 64);
+      }
+
+      // Convert canvas to a Three.js Texture
+      const hudTexture = new THREE.CanvasTexture(hudCanvas);
+      // Ensure the texture maps nicely
+      hudTexture.minFilter = THREE.LinearFilter;
+      
+      const hudMaterial = new THREE.MeshBasicMaterial({ 
+        map: hudTexture, 
+        transparent: true, 
+        opacity: 0.85,
+        depthTest: false, // Ensures it renders ON TOP of everything
+        depthWrite: false
+      });
+
+      // Create a small plane and position it relative to the camera
+      const hudPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.1), hudMaterial);
+      // X = Right (+), Y = Up (+), Z = Forward (-)
+      hudPlane.position.set(0.3, 0.22, -0.7); 
+      hudPlane.renderOrder = 999; // Force top rendering priority
+      camera.add(hudPlane); // Attach to camera so it moves with the user's head
+
+      // ─── Controllers ─────────────────────────────────────────────────────────
       // Controllers live in the scene; the XR runtime positions them correctly
       const controller0 = renderer.xr.getController(0);
       const controller1 = renderer.xr.getController(1);
