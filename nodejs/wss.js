@@ -1,6 +1,12 @@
 import { createServer } from 'http'; // Native Node.js HTTP module
 import { WebSocketServer } from 'ws';
 
+console.log("process.version", process.version);
+console.log("process.versions", process.versions);
+
+// If you want to see all dependency versions:
+// console.log(process.versions);
+
 const PORT = process.env.PORT || 3000;
 
 // 1. Create a standard HTTP server to handle the /healthz and /oculus/me routes
