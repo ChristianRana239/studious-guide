@@ -24,9 +24,11 @@ SALVARE() {
     if [[ "$input_lower" =~ ^y[es]*$ ]]; then
         gum style --foreground 46 "Procedo con git..."
         
+        gum style --foreground 226 "Stage dei file .html..."
         # 3. Aggiunge SOLO i file .html ovunque si trovino
         find . -type f -name "*.html" -exec git add {} +
         
+        gum style --foreground 226 "Commit..."
         # 4. Committa usando esattamente la stringa digitata dall'utente
         git commit -m "struggling(typing): ${USER_INPUT}"
         
