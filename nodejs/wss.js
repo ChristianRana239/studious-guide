@@ -9,9 +9,22 @@ const server = createServer(async (req, res) => {
     // Parse the URL to handle paths and query parameters easily
     const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
+    // --- CORS Headers Configuration ---
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    };
+
+    // --- Handle Preflight OPTIONS requests ---
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, corsHeaders);
+      return res.end();
+    }
+
     // --- Healthcheck Route ---
     if (req.method === 'GET' && parsedUrl.pathname === '/healthz') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ status: 'OK', service: 'websocket-server' }));
     } 
     
@@ -20,7 +33,7 @@ const server = createServer(async (req, res) => {
       const oculusFragment = parsedUrl.searchParams.get('oculus_fragment');
       
       if (!oculusFragment) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ error: 'Missing oculus_fragment parameter' }));
       }
 
@@ -31,7 +44,7 @@ const server = createServer(async (req, res) => {
       const { code, org_scoped_id } = JSON.parse(decodedStr);
 
       if (!code || !org_scoped_id) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ error: 'Missing code or org_scoped_id in oculus_fragment' }));
       }
 
@@ -45,7 +58,7 @@ const server = createServer(async (req, res) => {
       // Extract the resulting access token (oauth_token)
       const oauthToken = postData.oauth_token; 
       if (!oauthToken) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({ error: 'Failed to obtain oauth_token from Oculus', details: postData }));
       }
 
@@ -55,17 +68,21 @@ const server = createServer(async (req, res) => {
       const getData = await getResponse.json();
 
       // Return the /me response to the client
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify(getData));
     }
 
     // Return 404 for any other HTTP requests that aren't routed or WebSocket upgrades
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.writeHead(404, { ...corsHeaders, 'Content-Type': 'text/plain' });
     res.end('Not Found');
 
   } catch (err) {
     console.error('HTTP Request Error:', err);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
+    // Include CORS headers on error responses too, so the frontend can read the error
+    res.writeHead(500, { 
+      'Access-Control-Allow-Origin': '*', 
+      'Content-Type': 'application/json' 
+    });
     res.end(JSON.stringify({ error: 'Internal Server Error', message: err.message }));
   }
 });
