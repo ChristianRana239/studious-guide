@@ -9,5 +9,22 @@
 			]
 		}
 	},
-	"postCreateCommand": ".devcontainer/post-create-command.sh"
+	"postCreateCommand": ".devcontainer/post-create-command.sh",
+	"forwardPorts": [
+		5500,
+		3000
+	],
+	// Configure port-specific properties.
+	"portsAttributes": {
+		"5500": {
+			"label": "Go Live",
+			"onAutoForward": "openPreview",
+			"visibility": "public"
+		},
+		"3000": {
+			"label": "Node.js WebSocket Server",
+			"onAutoForward": "notify",
+			"visibility": "public"
+		}
+	}
 }
