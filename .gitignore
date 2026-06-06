@@ -4,3 +4,7 @@ docs/vendor/
 post-create-command.sh.log
 tmp/
 .GH_REPO_SET-DEFAULT
+app/android_sdk
+app/commandlinetools-linux-6609375_latest.zip
+app/my-pwa/android.keystore
+app/my-pwa/gradle/wrapper/gradle-wrapper.jar

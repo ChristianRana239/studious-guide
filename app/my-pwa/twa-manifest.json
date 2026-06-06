@@ -1,0 +1,55 @@
+{
+  "packageId": "io.github.aab016.twa",
+  "applicationId": "0",
+  "host": "aab016.github.io",
+  "name": "Metaverso a Scuola",
+  "launcherName": "MetaSchool",
+  "display": "standalone",
+  "themeColor": "#6B46C1",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#6B46C1",
+  "enableNotifications": true,
+  "enableMicrophone": false,
+  "enableXRScene": true,
+  "startUrl": "/studious-guide/index.html",
+  "iconUrl": "https://aab016.github.io/studious-guide/assets/metaverso-a-scuola.black.square.512x512.png",
+  "maskableIconUrl": "https://aab016.github.io/studious-guide/assets/metaverso-a-scuola.black.square.512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/workspaces/studious-guide/app/my-pwa/android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://aab016.github.io/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "horizonPlatformSDK": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": true,
+  "horizonOSAppMode": "immersive",
+  "fullScopeUrl": "https://aab016.github.io/",
+  "minSdkVersion": 23,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
+}
