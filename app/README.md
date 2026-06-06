@@ -50,3 +50,14 @@ https://drive.google.com/drive/folders/1VWvVyD0qJnHImTOUMDNK-xhmSnemyxK1
 
 Keystore: /workspaces/studious-guide/app/my-pwa/android.keystore
 Gradle: /workspaces/studious-guide/app/my-pwa/gradle/wrapper/gradle-wrapper.jar
+
+# Create Digital Asset Link for your PWA
+https://developers.meta.com/horizon/documentation/web/pwa-packaging/#create-digital-asset-link-for-your-pwa
+
+keytool -list -v \
+    -keystore /workspaces/studious-guide/app/my-pwa/android.keystore \
+    -alias android \
+    -keypass <key-password> \
+    -storepass <store-password> | grep SHA256
+
+bubblewrap fingerprint add <fingerprint>
