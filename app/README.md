@@ -74,7 +74,7 @@ https://developers.meta.com/horizon/documentation/web/pwa-packaging/#create-digi
 keytool -list -v \
     -keystore /workspaces/studious-guide/app/my-pwa/android.keystore \
     -alias android \
-    -keypass <key-password> \
-    -storepass <store-password> | grep SHA256
+    -keypass '' \
+    -storepass '' | grep SHA256
 
-bubblewrap fingerprint add <fingerprint>
+bubblewrap fingerprint add B8:FC:20:E0:B4:2C:95:C7:FD:CD:57:51:95:43:49:13:A9:80:51:E6:3D:BA:C4:26:00:E4:73:09:7C:A5:B0:C1
