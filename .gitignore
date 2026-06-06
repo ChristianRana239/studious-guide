@@ -11,3 +11,8 @@ app/my-pwa/gradle/wrapper/gradle-wrapper.jar
 app/my-pwa/.gradle
 app/my-pwa/build
 app/my-pwa/app/build
+app/my-pwa/app-release-bundle.aab
+app/my-pwa/app-release-signed.apk
+.gitignore
+app/my-pwa/app-release-unsigned-aligned.apk
+app/my-pwa/app-release-signed.apk.idsig
