@@ -14,3 +14,7 @@ passiamo a clonare https://github.com/meta-quest/bubblewrap
 cd bubblewrap/bubblewrap
 npm install
 npm run build
+
+Da qua https://github.com/meta-quest/bubblewrap/blob/main/bubblewrap/Dockerfile#L3C28-L3C54 ho scoperto esistenza di @meta-quest/bubblewrap-cli
+
+npm install @meta-quest/bubblewrap-cli
