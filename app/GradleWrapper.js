@@ -56,6 +56,8 @@ class GradleWrapper {
      */
     async executeGradleCommand(args) {
         const env = this.androidSdkTools.getEnv();
+        env['ANDROID_HOME'] = '/workspaces/studious-guide/app/android_sdk';
+        console.log("AAAAAAAAAAAAAAAAAAAAAAA", {gradleCmd: this.gradleCmd, prj: this.projectLocation, args, env});
         await (0, util_1.executeFile)(this.gradleCmd, args, env, undefined, this.projectLocation);
     }
 }
