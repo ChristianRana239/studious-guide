@@ -1,5 +1,13 @@
 {
 	"name": "Node.js Sample",
+	"features": {
+		"ghcr.io/devcontainers/features/java:1": {
+			// https://github.com/devcontainers/features/tree/main/src/java
+			// https://sdkman.io/jdks/tem/
+			"version": "17.0.19",
+			"jdkDistro": "tem"
+		}
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
