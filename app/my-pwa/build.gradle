@@ -20,7 +20,8 @@ buildscript {
 
     repositories {
         google()
-        jcenter()
+        // jcenter() GEMINI told that JFrog shut down their Maven Central Repo
+        mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.9.1'
@@ -35,7 +36,8 @@ allprojects {
         // Allows us to use a local android-browser-helper.
         mavenLocal()
         google()
-        jcenter()
+        // jcenter() GEMINI told that JFrog shut down their Maven Central Repo
+        mavenCentral()
     }
 }
 
