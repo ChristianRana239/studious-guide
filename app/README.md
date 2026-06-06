@@ -7,56 +7,66 @@ https://developers.meta.com/horizon/documentation/web/pwa-packaging/
 
 Installato JDK Temurin (Eclipse Foundation) version 17 via GitHub Codespace .devcontainer/devcontainer.json features.
 
-cd app
-npm install
-alias bubblewrap=${PWD}/node_modules/.bin/bubblewrap
+- cd app
+- npm install
+- alias bubblewrap=${PWD}/node_modules/.bin/bubblewrap
 
-La version 6609375 è hardcoded qua
+La versione 6609375 è hardcoded qua
 https://github.com/meta-quest/bubblewrap/blob/bde45f6ea3bd4eb958193575cd71a8b7b3e99a77/bubblewrap/packages/cli/src/lib/AndroidSdkToolsInstaller.ts#L22-L26
 
-wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip
-unzip commandlinetools-linux-6609375_latest.zip
+- wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip
+- unzip commandlinetools-linux-6609375_latest.zip
+
 
 https://developer.android.com/tools/sdkmanager tricky session
-mkdir android_sdk
-mv tools android_sdk/
-mkdir -p android_sdk/cmdline-tools/latest
-mv android_sdk/tools/bin android_sdk/cmdline-tools/latest/
-mv android_sdk/tools/lib android_sdk/cmdline-tools/latest/
-mv android_sdk/tools/NOTICE.txt android_sdk/cmdline-tools/latest/
-mv android_sdk/tools/source.properties android_sdk/cmdline-tools/latest/
+- mkdir android_sdk
+- mv tools android_sdk/
+- mkdir -p android_sdk/cmdline-tools/latest
+- mv android_sdk/tools/bin android_sdk/cmdline-tools/latest/
+- mv android_sdk/tools/lib android_sdk/cmdline-tools/latest/
+- mv android_sdk/tools/NOTICE.txt android_sdk/cmdline-tools/latest/
+- mv android_sdk/tools/source.properties android_sdk/cmdline-tools/latest/
+- rm -Rf android_sdk/tools
+- `export PATH=$PATH:${PWD}/android_sdk/cmdline-tools/latest/bin`
 
-rm -Rf android_sdk/tools
+Installare Android SDK API level 23
+- sdkmanager "platforms;android-23" "build-tools;23.0.3" "platform-tools"
 
-export PATH=$PATH:${PWD}/android_sdk/cmdline-tools/latest/bin
 
-sdkmanager "platforms;android-23" "build-tools;23.0.3" "platform-tools"
+`cd my-pwa`
 
-cd my-pwa
-bubblewrap init --manifest=https://aab016.github.io/manifest.json --metaquest
-JDK path: /usr/local/sdkman/candidates/java/current
-Android SDK path: /workspaces/studious-guide/app/android_sdk/cmdline-tools/latest
+`bubblewrap init --manifest=https://aab016.github.io/manifest.json --metaquest`
+- JDK path: /usr/local/sdkman/candidates/java/current
+- Android SDK path: /workspaces/studious-guide/app/android_sdk/cmdline-tools/latest
+- Splash screen color: #6b46c1
+- Maskable icon URL: https://aab016.github.io/studious-guide/assets/metaverso-a-scuola.black.square.512x512.png
+- Monochrome icon URL: vuoto
 
-Splash screen color: #6b46c1
-Maskable icon URL: https://aab016.github.io/studious-guide/assets/metaverso-a-scuola.black.square.512x512.png
-Monochrome icon URL: vuoto
-
-First and Last names (eg: John Doe): Luigi Lagrange
-Organizational Unit (eg: Engineering Dept): Computer Science Dept
-Organization (eg: Company Name): MIIS038002
+Prima creazione del keystore
+- First and Last names (eg: John Doe): Luigi Lagrange
+- Organizational Unit (eg: Engineering Dept): Computer Science Dept
+- Organization (eg: Company Name): MIIS038002
 
 Ripristinare da Google Drive
 https://drive.google.com/drive/folders/1VWvVyD0qJnHImTOUMDNK-xhmSnemyxK1
-
-Keystore: /workspaces/studious-guide/app/my-pwa/android.keystore
-Gradle: /workspaces/studious-guide/app/my-pwa/gradle/wrapper/gradle-wrapper.jar
+- Keystore: /workspaces/studious-guide/app/my-pwa/android.keystore
+- Gradle: /workspaces/studious-guide/app/my-pwa/gradle/wrapper/gradle-wrapper.jar
 
 Per evitare che i log di gradle sfondino il maxBuffer di node...
-export ANDROID_HOME=/workspaces/studious-guide/app/android_sdk
-chmod +x gradlew
-./gradlew assembleRelease
+- `export ANDROID_HOME=/workspaces/studious-guide/app/android_sdk`
+- chmod +x gradlew
+- ./gradlew assembleRelease
+- unset ANDROID_HOME
 
-bubblewrap build
+`Caused by: java.lang.IllegalStateException: Failed to find target with hash string 'android-32' in: /workspaces/studious-guide/app/android_sdk/cmdline-tools/latest`
+
+- sdkmanager "platforms;android-32" "build-tools;32.0.0"
+- sdkmanager --licenses
+
+FTW
+`cp ../GradleWrapper.js /workspaces/studious-guide/app/node_modules/@meta-quest/bubblewrap-core/dist/lib/GradleWrapper.js`
+
+`bubblewrap build`
 
 # Create Digital Asset Link for your PWA
 https://developers.meta.com/horizon/documentation/web/pwa-packaging/#create-digital-asset-link-for-your-pwa
