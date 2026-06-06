@@ -8,3 +8,5 @@ app/android_sdk
 app/commandlinetools-linux-6609375_latest.zip
 app/my-pwa/android.keystore
 app/my-pwa/gradle/wrapper/gradle-wrapper.jar
+app/my-pwa/.gradle
+app/my-pwa/build

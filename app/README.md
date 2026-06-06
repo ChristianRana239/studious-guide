@@ -51,6 +51,13 @@ https://drive.google.com/drive/folders/1VWvVyD0qJnHImTOUMDNK-xhmSnemyxK1
 Keystore: /workspaces/studious-guide/app/my-pwa/android.keystore
 Gradle: /workspaces/studious-guide/app/my-pwa/gradle/wrapper/gradle-wrapper.jar
 
+Per evitare che i log di gradle sfondino il maxBuffer di node...
+export ANDROID_HOME=/workspaces/studious-guide/app/android_sdk
+chmod +x gradlew
+./gradlew assembleRelease
+
+bubblewrap build
+
 # Create Digital Asset Link for your PWA
 https://developers.meta.com/horizon/documentation/web/pwa-packaging/#create-digital-asset-link-for-your-pwa
 
